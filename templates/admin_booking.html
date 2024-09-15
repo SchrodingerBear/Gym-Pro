@@ -28,10 +28,13 @@
           <thead>
             <tr>
               <th>Booking ID</th>
-              <th>Member </th>
+              <th>Member Name</th>
+              <th>Email</th>
+              <th>Contact Number</th>
+              <th>Gender</th>
+              <th>Date of Birth</th>
               <th>Date</th>
               <th>Time</th>
-              <th>Message</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -40,10 +43,13 @@
             {% for booking in bookings %}
             <tr id="bookingRow_{{ booking.id }}">
               <td>{{ booking.id }}</td>
-              <td>{{ booking.user_name }}</td>
+              <td>{{ booking.user.firstname }} {{ booking.user.lastname }}</td>
+              <td>{{ booking.user.id_number }}</td>
+              <td>{{ booking.user.contact_number }}</td>
+              <td>{{ booking.user.gender.capitalize() }}</td>
+              <td>{{ booking.user.date_of_birth.strftime('%Y-%m-%d') }}</td>
               <td>{{ booking.appointment_date.strftime('%Y-%m-%d') }}</td>
               <td>{{ booking.appointment_time.strftime('%I:%M %p') }}</td>
-              <td>{{ booking.message }}</td>
               <td>{{ booking.status.capitalize() }}</td>
               <td>
                 <form action="{{ url_for('update_booking_status', booking_id=booking.id) }}" method="POST">
@@ -59,6 +65,7 @@
             {% endfor %}
           </tbody>
         </table>
+        
       </div>
     </div>
   </main>

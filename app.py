@@ -139,14 +139,17 @@ def delete_booking():
 
 
 class Booking(db.Model):
+    __tablename__ = "booking"
+
     id = db.Column(db.Integer, primary_key=True)
-    member_name = db.Column(db.String(100), nullable=False)
-    user_name = db.Column(db.String(100), nullable=False)
+    member_name = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     contact_number = db.Column(db.String(20), nullable=False)
     appointment_date = db.Column(db.Date, nullable=False)
     appointment_time = db.Column(db.Time, nullable=False)
     message = db.Column(db.Text)
     status = db.Column(db.String(20), default="approve")
+
+    user = db.relationship("User", backref="bookings")
 
 
 class Equipment(db.Model):
@@ -698,6 +701,22 @@ def admin_calendar():
 @app.route("/admin_booking")
 def admin_booking():
     bookings = Booking.query.all()
+
+    # for booking in bookings:
+    #     print(f"Booking ID: {booking.id}")
+    #     if booking.user:
+    #         print(f"Member Name: {booking.user.firstname} {booking.user.lastname}")
+    #         print(f"User ID Number: {booking.user.id_number}")
+    #         print(f"User Contact Number: {booking.user.contact_number}")
+    #         print(f"Date of Birth: {booking.user.date_of_birth}")
+    #         print(f"Gender: {booking.user.gender}")
+    #         print(f"Membership Status: {booking.user.membership_status}")
+    #     print(f"Appointment Date: {booking.appointment_date}")
+    #     print(f"Appointment Time: {booking.appointment_time}")
+    #     print(f"Message: {booking.message}")
+    #     print(f"Status: {booking.status}")
+    #     print("-" * 40)
+
     return render_template("admin_booking.html", bookings=bookings)
 
 
@@ -709,7 +728,7 @@ def update_booking_status(booking_id):
         if not booking:
             return jsonify({"success": False, "error": "Booking not found"})
 
-        user = User.query.filter_by(contact_number=booking.contact_number).first()
+        user = User.query.filter_by(id=booking.member_name).first()
 
         if not user:
             return jsonify({"success": False, "error": "User not found"})
