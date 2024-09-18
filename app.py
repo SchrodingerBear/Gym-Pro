@@ -878,6 +878,17 @@ from datetime import date
 @app.route("/user_appointments", methods=["GET"])
 def user_appointments():
 
+    return render_template("user_appointments.html")
+
+
+from datetime import timedelta
+
+
+@app.route("/book_appointment", methods=["POST"])
+def book_appointment():
+    appointment_date = request.form["appointment_date"]
+    appointment_time = request.form["appointment_time"]
+
     today = date.today()
 
     user_id = session.get("user_id")
@@ -886,37 +897,41 @@ def user_appointments():
         return "Please log in first", 401
 
     existing_booking = Booking.query.filter_by(
-        member_name=user_id, appointment_date=today
+        member_name=user_id,
+        appointment_date=appointment_date,
+        appointment_time=appointment_time,
     ).first()
 
     if existing_booking:
         return render_template("user_appointments.html", bookedalready=True)
 
-    appointments_today = Booking.query.filter_by(appointment_date=today).all()
+    time_slots = {
+        "08:00:00": ("08:00:00", "10:00:00"),
+        "10:00:00": ("10:00:00", "12:00:00"),
+        "12:00:00": ("12:00:00", "14:00:00"),
+        "14:00:00": ("14:00:00", "16:00:00"),
+    }
 
-    appointment_count = len(appointments_today)
-    full = False
-    if appointment_count >= 10:
-        full = True
-    print(full)
-    return render_template("user_appointments.html", full=full, bookedalready=False)
+    slot_start_time_str, slot_end_time_str = time_slots.get(appointment_time)
+    appointments_in_slot = Booking.query.filter(
+        Booking.appointment_date == appointment_date,
+        Booking.appointment_time >= slot_start_time_str,
+        Booking.appointment_time < slot_end_time_str,
+    ).all()
 
+    if len(appointments_in_slot) >= 10:
+        return render_template("user_appointments.html", slot_full=True)
 
-@app.route("/book_appointment", methods=["POST"])
-def book_appointment():
-    user_name = request.form["user_name"]
-    contact_number = request.form["contact_number"]
-    appointment_date = request.form["appointment_date"]
-    appointment_time = request.form["appointment_time"]
-    message = request.form["message"]
+    appointments_today = Booking.query.filter_by(
+        appointment_date=appointment_date
+    ).all()
+    if len(appointments_today) >= 40:
+        return render_template("user_appointments.html", day_full=True)
 
     new_booking = Booking(
-        member_name=session.get("user_id"),
-        user_name=user_name,
-        contact_number=contact_number,
+        member_name=user_id,
         appointment_date=datetime.strptime(appointment_date, "%Y-%m-%d"),
-        appointment_time=datetime.strptime(appointment_time, "%H:%M").time(),
-        message=message,
+        appointment_time=appointment_time,
         status="accepted",
     )
 

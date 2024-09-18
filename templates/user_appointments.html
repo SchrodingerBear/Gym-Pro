@@ -62,30 +62,6 @@
 
           <form action="{{ url_for('book_appointment') }}" method="POST">
             <div class="form-group">
-              <label for="user_name">Name:</label>
-              <input
-                type="text"
-                id="user_name"
-                name="user_name"
-                class="form-control"
-                required
-                placeholder="Your Name"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="contact_number">Contact Number:</label>
-              <input
-                type="tel"
-                value="63"
-                id="contact_number"
-                name="contact_number"
-                class="form-control"
-                required
-                placeholder="Your Contact Number"
-              />
-            </div>
-            <div class="form-group">
               <label for="appointment_date">Date:</label>
               <input
                 type="date"
@@ -104,48 +80,34 @@
 
             <div class="form-group">
               <label for="appointment_time">Time:</label>
-              <input
-                type="time"
+              <select
                 id="appointment_time"
                 name="appointment_time"
                 class="form-control"
                 required
-                min="08:00"
-                max="16:00"
-              />
-            </div>
-
-            <script>
-              // Limit the available time slots to between 8 AM and 4 PM
-              document
-                .getElementById("appointment_time")
-                .setAttribute("min", "08:00");
-              document
-                .getElementById("appointment_time")
-                .setAttribute("max", "16:00");
-            </script>
-
-            <!-- Add the message input field here -->
-            <div class="form-group">
-              <label for="message">Message:</label>
-              <textarea
-                id="message"
-                name="message"
-                class="form-control"
-                placeholder="Your message (optional)"
-              ></textarea>
+              >
+                <option value="08:00:00">8:00 AM - 10:00 AM</option>
+                <option value="10:00:00">10:00 AM - 12:00 PM</option>
+                <option value="12:00:00">12:00 PM - 2:00 PM</option>
+                <option value="14:00:00">2:00 PM - 4:00 PM</option>
+              </select>
             </div>
 
             {% if bookedalready %}
-            <!-- If the user has already booked an appointment today -->
             <div class="alert alert-info" role="alert">
-              You have already booked an appointment for today.
+              You have already booked an appointment for that time.
+            </div>
+            <button type="submit" class="col col-12 btn btn-primary">
+              Book Appointment
+            </button>
+            {% elif slot_full %}
+            <div class="alert alert-danger" role="alert">
+              The selected time slot is full. Please choose another time.
             </div>
             <button type="submit" class="col col-12 btn btn-primary" disabled>
               Book Appointment
             </button>
-            {% elif full %}
-            <!-- If the appointments for today are full -->
+            {% elif day_full %}
             <div class="alert alert-danger" role="alert">
               No booking available for today. Appointment slots are full.
             </div>
@@ -153,7 +115,6 @@
               Book Appointment
             </button>
             {% else %}
-            <!-- If there is still availability -->
             <button type="submit" class="col col-12 btn btn-primary">
               Book Appointment
             </button>

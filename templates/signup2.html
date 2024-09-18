@@ -176,7 +176,6 @@
                         </select>
                       </p>
                     </div>
-                    <!-- Contact Number field -->
                     <div class="col-md-6">
                       <p>
                         <input
@@ -184,11 +183,14 @@
                           name="contact_no"
                           placeholder="Contact Number"
                           required
-                          value="63"
+                          value="+63"
                           type="tel"
+                          pattern="+639\d{9}"
+                          oninput="this.value = '+63' + this.value.slice(3).replace(/[^0-9]/g, '').slice(0, 10)"
                         />
                       </p>
                     </div>
+
                     <!-- Submit button -->
                     <div class="col-md-12">
                       <button
