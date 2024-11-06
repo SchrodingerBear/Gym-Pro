@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>User Dashboard</title>
+    <script>
+        async function fetchUserDashboardData() {
+            try {
+                const response = await fetch('/user/dashboard/data');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                document.getElementById('userBorrowedCount').innerText = data.borrowed_count || 0;
+                document.getElementById('upcoming-appointments').innerText = data.upcoming_appointments || 0;
+                document.getElementById('notifications').innerText = data.notifications || 0;
+            } catch (error) {
+                console.error('Error fetching user dashboard data:', error);
+            }
+        }
+        setInterval(fetchUserDashboardData, 5000);
+        window.onload = fetchUserDashboardData;
+    </script>
+</head>
+<body>
+    <aside class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('user_dashboard') }}" class="active"><i class="icon-dashboard"></i> Dashboard</a></li>
+            <li><a href="{{ url_for('user_appointments') }}"><i class="icon-calendar"></i> Book Appointment</a></li>
+            <li><a href="{{ url_for('user_equipments') }}"><i class="icon-equipment"></i> Borrow Equipments</a></li>
+            <li><a href="{{ url_for('user_feedback') }}"><i class="icon-feedback"></i> Feedback</a></li>
+            <li><a href="{{ url_for('user_notifications') }}"><i class="icon-notifications"></i> Notifications</a></li>
+            <li><a href="{{ url_for('user_settings') }}"><i class="icon-settings"></i> Settings</a></li>
+        </ul>
+    </aside>
+
+    <div class="dashboard-content">
+        <header class="dashboard-header">
+            <h1>Your Dashboard</h1>
+        </header>
+        <main>
+            <section class="dashboard-stats" aria-label="Dashboard Statistics">
+                <article class="stats-item" aria-live="polite">
+                    <i class="icon-calendar" style="font-size: 2em; color: #4caf50;"></i>
+                    <p>Upcoming Appointments: <span id="upcoming-appointments">0</span></p>
+                </article>
+                <article class="stats-item" aria-live="polite">
+                    <i class="icon-equipment" style="font-size: 2em; color: #ff9800;"></i>
+                    <p>Borrowed Equipment: <span id="userBorrowedCount">0</span></p>
+                </article>
+                <article class="stats-item" aria-live="polite">
+                    <i class="icon-notifications" style="font-size: 2em; color: #2196f3;"></i>
+                    <p>Notifications: <span id="notifications">0</span></p>
+                </article>
+            </section>
+        </main>
+        <footer>
+            <p>&copy; 2024 GymPro</p>
+        </footer>
+    </div>
+</body>
+</html>

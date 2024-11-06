@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_equipments.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
+    <title>Borrow Equipments</title>
+</head>
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <header class="dashboard-header">
+        <h1>Borrow Equipments</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <aside class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('user_dashboard') }}"><i class="icon-dashboard"></i> Dashboard</a></li>
+            <li><a href="{{ url_for('user_appointments') }}"><i class="icon-calendar"></i> Book Appointment</a></li>
+            <li><a href="{{ url_for('user_equipments') }}" class="active"><i class="icon-equipment"></i> Borrow Equipments</a></li>
+            <li><a href="{{ url_for('user_feedback') }}"><i class="icon-feedback"></i> Feedback</a></li>
+            <li><a href="{{ url_for('user_notifications') }}"><i class="icon-notifications"></i> Notifications</a></li>
+            <li><a href="{{ url_for('user_settings') }}"><i class="icon-settings"></i> Settings</a></li>
+        </ul>
+    </aside>
+
+    <main class="dashboard-content">
+        <section class="equipments-section">
+            {% for equipment in equipment_list %}
+                <div class="equipment-card">
+                    <img src="{{ url_for('static', filename='images/' + (equipment.image if equipment.image else 'default.png')) }}" alt="{{ equipment.name }}">
+
+                    <h2>{{ equipment.name }}</h2>
+                    {% if equipment.quantity > 0 %}
+                        <button class="borrow-button" onclick="openBorrowModal('{{ equipment.id }}')">Borrow Now</button>
+                    {% else %}
+                        <button class="borrow-button" disabled>Out of Stock</button>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </section>
+    </main>
+    <!-- Modal for Borrow Form -->
+<div id="borrowModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Borrow Equipment</h2>
+        <form id="borrowForm">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required><br><br>
+            <label for="contact">Contact Number:</label>
+            <input type="tel" id="contact" name="contact" required><br><br>
+            <label for="borrowDate">Borrow Date:</label>
+            <input type="date" id="borrowDate" name="borrowDate" required><br><br>
+            <label for="returnDate">Return Date:</label>
+            <input type="date" id="returnDate" name="returnDate" required><br><br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+    <div id="borrowModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBorrowModal()">&times;</span>
+            <h2>Borrow Equipment</h2>
+            <form action="{{ url_for('submit_borrow_request') }}" method="POST">
+                <input type="hidden" name="equipment_id" id="modalEquipmentId">
+                <label for="returnDate">Return Date:</label>
+                <input type="date" name="return_date" required>
+                <button type="submit">Submit</button>
+            </form>            
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 GymPro</p>
+    </footer>
+
+    <script>
+        function openBorrowModal(equipmentId) {
+            document.getElementById("modalEquipmentId").value = equipmentId;
+            document.getElementById("borrowModal").style.display = "block";
+        }
+
+        function closeBorrowModal() {
+            document.getElementById("borrowModal").style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById("borrowModal");
+            if (event.target == modal) {
+                closeBorrowModal();
+            }
+        }
+    </script>
+</body>
+</html>

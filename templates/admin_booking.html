@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Booking Management</title>
+</head>
+<body class="admin-dashboard">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+        <h2>GymPro Manager</h2>
+        <nav class="admin-nav">
+            <ul>
+                <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('admin_membership') }}"><i class="fas fa-users"></i> Membership</a></li>
+                <li><a href="{{ url_for('admin_calendar') }}"><i class="fas fa-calendar-alt"></i> Calendar</a></li>
+                <li><a href="{{ url_for('admin_booking') }}" class="active"><i class="fas fa-book"></i> Bookings</a></li>
+                <li><a href="{{ url_for('admin_borrowing') }}"><i class="fas fa-cogs"></i> Borrowing</a></li>
+                <li><a href="{{ url_for('admin_inventory') }}"><i class="fas fa-box"></i> Inventory</a></li>
+                <li><a href="{{ url_for('admin_notifications') }}"><i class="fas fa-bell"></i> Notifications</a></li>
+                <li><a href="{{ url_for('admin_settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
+                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <main class="admin-content">
+        <header class="admin-header">
+            <h1>Booking Management</h1>
+        </header>
+
+        <div class="booking-box">
+            <h2>Manage Bookings</h2>
+
+            <!-- Bookings Table -->
+            <div class="booking-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>User</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsList">
+                        {% for booking in bookings %}
+                        <tr id="bookingRow_{{ booking.id }}">
+                            <td>{{ booking.id }}</td>
+                            <td>{{ booking.user_name }}</td>
+                            <td>{{ booking.appointment_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ booking.appointment_time.strftime('%I:%M %p') }}</td>
+                            <td>{{ booking.status.capitalize() }}</td>
+                            <td>
+                                <form action="{{ url_for('update_booking_status', booking_id=booking.id) }}" method="POST">
+                                    <select name="status" id="statusSelect_{{ booking.id }}">
+                                        <option value="pending" {% if booking.status.lower() == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="accepted" {% if booking.status.lower() == 'accepted' %}selected{% endif %}>Accept</option>
+                                        <option value="rejected" {% if booking.status.lower() == 'rejected' %}selected{% endif %}>Reject</option>
+                                    </select>
+                                    <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for Rejection -->
+    <div id="rejectionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Provide Rejection Reason and Suggested Solution</h2>
+            <form id="rejectionForm" method="POST">
+                <input type="hidden" name="booking_id" id="modalBookingId">
+                <label for="rejection_reason">Rejection Reason:</label>
+                <textarea name="rejection_reason" rows="4" required style="width: 100%;"></textarea>
+                <label for="solution">Suggested Solution:</label>
+                <textarea name="solution" rows="4" required style="width: 100%;"></textarea>
+                <input type="hidden" name="status" value="rejected" />
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="admin-footer">
+        <p>&copy; 2024 GymPro</p>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectElements = document.querySelectorAll('select[name="status"]');
+            const modal = document.getElementById('rejectionModal');
+            const closeButton = modal.querySelector('.close-button');
+            const rejectionForm = document.getElementById('rejectionForm');
+            const modalBookingId = document.getElementById('modalBookingId');
+    
+            selectElements.forEach(select => {
+                select.addEventListener('change', function () {
+                    if (this.value.toLowerCase() === 'rejected') {
+                        // Set booking ID for modal form
+                        modalBookingId.value = this.form.querySelector('input[name="booking_id"]').value;
+    
+                        // Show the modal
+                        modal.style.display = 'block';
+                    } else {
+                        handleBookingStatusChange(this.form);
+                    }
+                });
+            });
+    
+            // Close the modal when clicking the close button
+            closeButton.addEventListener('click', function () {
+                modal.style.display = 'none';
+            });
+    
+            // Submit form when the admin clicks "Submit" inside the modal
+            rejectionForm.addEventListener('submit', function (event) {
+                event.preventDefault(); // Prevent default submission
+                const bookingId = modalBookingId.value;
+                const formData = new FormData(rejectionForm);
+    
+                // Use Fetch API to submit the rejection
+                fetch(`/update_booking_status/${bookingId}`, {
+                    method: 'POST',
+                    body: formData
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.success) {
+                          // Remove the booking row from the table after rejection
+                          const bookingRow = document.getElementById(`bookingRow_${bookingId}`);
+                          if (bookingRow) {
+                              bookingRow.remove();
+                          }
+                          modal.style.display = 'none';
+                      } else {
+                          alert('An error occurred while processing the rejection.');
+                      }
+                  }).catch(error => {
+                      console.error('Error:', error);
+                      alert('An error occurred while processing the rejection.');
+                  });
+            });
+    
+            function handleBookingStatusChange(form) {
+                const formData = new FormData(form);
+                const bookingId = formData.get('booking_id');
+    
+                fetch(`/update_booking_status/${bookingId}`, {
+                    method: 'POST',
+                    body: formData
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.success) {
+                          // Update the status column in the table if needed
+                          const statusCell = form.closest('tr').querySelector('td:nth-child(5)');
+                          const statusValue = form.querySelector('select[name="status"]').value;
+                          statusCell.innerText = statusValue.charAt(0).toUpperCase() + statusValue.slice(1);
+                      } else {
+                          alert('An error occurred while processing the booking update.');
+                      }
+                  }).catch(error => {
+                      console.error('Error:', error);
+                      alert('An error occurred while processing the booking update.');
+                  });
+            }
+        });
+    </script>    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</body>
+</html>

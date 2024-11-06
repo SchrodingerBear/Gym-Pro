@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Your Notifications</title>
+</head>
+<body>
+    <aside class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('user_dashboard') }}"><i class="icon-dashboard"></i> Dashboard</a></li>
+            <li><a href="{{ url_for('user_appointments') }}"><i class="icon-calendar"></i> Book Appointment</a></li>
+            <li><a href="{{ url_for('user_equipments') }}"><i class="icon-equipment"></i> Borrow Equipments</a></li>
+            <li><a href="{{ url_for('user_feedback') }}"><i class="icon-feedback"></i> Feedback</a></li>
+            <li><a href="{{ url_for('user_notifications') }}" class="active"><i class="icon-notifications"></i> Notifications</a></li>
+            <li><a href="{{ url_for('user_settings') }}"><i class="icon-settings"></i> Settings</a></li>
+        </ul>
+    </aside>
+
+    <div class="dashboard-content centered-content">
+        <header class="dashboard-header">
+            <h1>Your Notifications</h1>
+        </header>
+        <main>
+            <div class="notifications-section">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search notifications..." id="notificationSearch">
+                    <button type="button" id="dismissAllButton">Dismiss All</button>
+                </div>
+                <ul id="userNotificationsList">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                            <li class="notification-item {{ 'seen' if notification.seen else 'unseen' }}" id="notification_{{ notification.id }}">
+                                <div class="notification-card">
+                                    <div class="notification-header">
+                                        <span class="notification-status-dot {{ 'unread' if not notification.seen else 'read' }}"></span>
+                                        <span class="notification-title">ACTION REQUIRED</span>
+                                        <button class="dismiss-button" type="button" onclick="deleteNotification('{{ notification.id }}');">Delete</button>
+                        </div>
+                                    <p class="notification-content">{{ notification.message }}</p>
+                                    <div class="notification-footer">
+                                        <span class="notification-date">{{ notification.created_at.strftime('%m/%d/%Y %I:%M %p') if notification.created_at else 'Date Unavailable' }}</span>
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="notification-item no-notifications">
+                            <div class="notification-card">
+                                <p>You have no notifications.</p>
+                            </div>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </main>
+        <footer>
+            <p>&copy; 2024 GymPro</p>
+        </footer>
+    </div>
+
+    <script>
+        // Delete a specific notification
+        function deleteNotification(notificationId) {
+            fetch('/delete_notification/' + notificationId, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to delete notification');
+                }
+            })
+            .then(data => {
+                if (data.success) {
+                    // Remove notification from the list
+                    const notificationElement = document.getElementById('notification_' + notificationId);
+                    if (notificationElement) {
+                        notificationElement.remove();
+                    }
+                } else {
+                    alert('An error occurred while deleting the notification.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the notification.');
+            });
+        }
+    </script>
+
+</body>
+</html>

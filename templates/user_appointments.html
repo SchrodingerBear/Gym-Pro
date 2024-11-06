@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_appointments.css') }}">
+    <title>Your Appointments</title>
+</head>
+<body>
+    <header class="dashboard-header">
+        <h1>Your Appointments</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <aside class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('user_dashboard') }}"><i class="icon-dashboard"></i> Dashboard</a></li>
+            <li><a href="{{ url_for('user_appointments') }}" class="active"><i class="icon-calendar"></i> Book Appointment</a></li>
+            <li><a href="{{ url_for('user_equipments') }}"><i class="icon-equipment"></i> Borrow Equipments</a></li>
+            <li><a href="{{ url_for('user_feedback') }}"><i class="icon-feedback"></i> Feedback</a></li>
+            <li><a href="{{ url_for('user_notifications') }}"><i class="icon-notifications"></i> Notifications</a></li>
+            <li><a href="{{ url_for('user_settings') }}"><i class="icon-settings"></i> Settings</a></li>
+        </ul>
+    </aside>
+
+    <main class="dashboard-content">
+        <section class="appointments-section">
+            <h2>Book an Appointment</h2>
+            <form action="{{ url_for('book_appointment') }}" method="POST" class="appointment-form">
+                <div class="form-group">
+                    <label for="user_name">Name:</label>
+                    <input type="text" id="user_name" name="user_name" required placeholder="Your Name">
+                </div>
+
+                <div class="form-group">
+                    <label for="contact_number">Contact Number:</label>
+                    <input type="tel" id="contact_number" name="contact_number" required placeholder="Your Contact Number">
+                </div>
+
+                <div class="form-group">
+                    <label for="appointment_date">Select Appointment Date:</label>
+                    <input type="date" id="appointment_date" name="appointment_date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="appointment_time">Select Appointment Time:</label>
+                    <input type="time" id="appointment_time" name="appointment_time" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Message (optional):</label>
+                    <textarea id="message" name="message" rows="4" placeholder="Any additional information"></textarea>
+                </div>
+
+                <button type="submit">Book Appointment</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 GymPro</p>
+    </footer>
+</body>
+</html>
