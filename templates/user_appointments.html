@@ -1,70 +1,339 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_appointments.css') }}">
-    <title>Your Appointments</title>
-</head>
-<body>
-    <header class="dashboard-header">
-        <h1>Your Appointments</h1>
-        <nav>
-            <ul>
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('logout') }}">Logout</a></li>
-            </ul>
-        </nav>
-    </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GymPro User Panel</title>
+    <link
+      href="static/images/Gympro Logo.png"
+      rel="shortcut icon"
+      type="image/x-icon"
+    />
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome CDN -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* Make the body take the full viewport height */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
 
-    <aside class="sidebar">
-        <ul>
-            <li><a href="{{ url_for('user_dashboard') }}"><i class="icon-dashboard"></i> Dashboard</a></li>
-            <li><a href="{{ url_for('user_appointments') }}" class="active"><i class="icon-calendar"></i> Book Appointment</a></li>
-            <li><a href="{{ url_for('user_equipments') }}"><i class="icon-equipment"></i> Borrow Equipments</a></li>
-            <li><a href="{{ url_for('user_feedback') }}"><i class="icon-feedback"></i> Feedback</a></li>
-            <li><a href="{{ url_for('user_notifications') }}"><i class="icon-notifications"></i> Notifications</a></li>
-            <li><a href="{{ url_for('user_settings') }}"><i class="icon-settings"></i> Settings</a></li>
-        </ul>
-    </aside>
+      /* Sidebar Style */
+      #sidebar {
+        position: fixed;
+        z-index: 99999;
+        top: 0;
+        left: 0;
+        height: 100vh; /* Full height */
+        width: 250px;
+        padding-top: 20px;
+        background-color: #0c0920; /* Sidebar background color */
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease-in-out;
+        display: block; /* Show by default on desktop */
+      }
 
-    <main class="dashboard-content">
-        <section class="appointments-section">
-            <h2>Book an Appointment</h2>
-            <form action="{{ url_for('book_appointment') }}" method="POST" class="appointment-form">
-                <div class="form-group">
-                    <label for="user_name">Name:</label>
-                    <input type="text" id="user_name" name="user_name" required placeholder="Your Name">
-                </div>
+      /* Sidebar hidden on small screens */
+      #sidebar.closed {
+        transform: translateX(-250px); /* Hide sidebar off-screen */
+      }
 
-                <div class="form-group">
-                    <label for="contact_number">Contact Number:</label>
-                    <input type="tel" id="contact_number" name="contact_number" required placeholder="Your Contact Number">
-                </div>
+      /* Sidebar items style */
+      #sidebar .list-group-item {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 0;
+        background-color: transparent;
+        color: #adb5bd; /* Default text color */
+        text-decoration: none; /* Remove any text decoration */
+      }
 
-                <div class="form-group">
-                    <label for="appointment_date">Select Appointment Date:</label>
-                    <input type="date" id="appointment_date" name="appointment_date" required>
-                </div>
+      /* Sidebar items hover style */
+      #sidebar .list-group-item:hover {
+        background-color: transparent; /* No background color on hover */
+        color: #20f58a; /* Green color on hover */
+        text-decoration: none; /* Remove underline */
+      }
 
-                <div class="form-group">
-                    <label for="appointment_time">Select Appointment Time:</label>
-                    <input type="time" id="appointment_time" name="appointment_time" required>
-                </div>
+      /* Sidebar active item style */
+      #sidebar .list-group-item.active {
+        background-color: transparent; /* No background color on active */
+        color: #20f58a; /* Active item color */
+      }
 
-                <div class="form-group">
-                    <label for="message">Message (optional):</label>
-                    <textarea id="message" name="message" rows="4" placeholder="Any additional information"></textarea>
-                </div>
+      /* Sidebar logo */
+      #sidebar .logo {
+        display: block;
+        margin-bottom: 20px;
+        text-align: center;
+      }
 
-                <button type="submit">Book Appointment</button>
-            </form>
-        </section>
-    </main>
+      /* Sidebar title */
+      #sidebar .logo img {
+        margin-bottom: 10px;
+      }
 
+      #sidebar .logo h3 {
+        color: #20f58a; /* Title color */
+        margin-top: 10px;
+      }
+
+      /* Main Content */
+      .main-content {
+        margin-left: 250px;
+        padding: 20px;
+        transition: margin-left 0.3s ease-in-out;
+        flex-grow: 1; /* Allow content to expand */
+      }
+
+      /* Ensure the container takes full height */
+      .container-fluid {
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+
+      /* Adjust the margin of main content on small screens */
+      @media (max-width: 768px) {
+        .main-content {
+          margin-left: 0;
+        }
+        /* Sidebar should be hidden on mobile */
+        #sidebar {
+          display: none; /* Hide sidebar initially on mobile */
+        }
+        /* Sidebar should be shown when not "closed" on mobile */
+        #sidebar.open {
+          display: block;
+        }
+      }
+
+      /* Footer Style */
+      footer {
+        background-color: #0c0920;
+        color: white;
+        text-align: center;
+        padding: 1rem 0;
+        margin-top: auto; /* Push the footer to the bottom */
+      }
+
+      /* Navbar style */
+      .navbar {
+        background-color: #0c0920; /* Dark background for navbar */
+        color: #20f58a; /* Green text color */
+        z-index: 9999;
+      }
+
+      .navbar .navbar-brand {
+        color: #20f58a; /* Green text for the navbar brand */
+      }
+
+      .navbar .navbar-brand:hover {
+        color: #adb5bd; /* Text color on hover */
+      }
+
+      /* Title styling */
+      h2 {
+        margin-top: 0;
+      }
+      a:hover {
+        color: #20f58a !important;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar Section -->
+    <nav
+      class="navbar navbar-expand-lg navbar-dark"
+      style="background-color: #0c0920"
+    >
+      <div class="container">
+        <a class="navbar-brand" href="#">Appointment </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+          onclick="toggleSidebar()"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ml-auto">
+            <!-- Home and Logout removed from Navbar -->
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3" id="sidebar">
+          <div class="logo">
+            <img
+              src="../static/images/Logo_gympro original ver.png"
+              alt="GymPro Logo"
+              width="100"
+            />
+            <h3>GymPro User Panel</h3>
+          </div>
+
+          <ul class="list-group">
+            <li class="list-group-item">
+              <a
+                href="{{ url_for('user_dashboard') }}"
+                class="d-block"
+                style="color: #adb5bd; text-decoration: none"
+              >
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+              </a>
+            </li>
+            <li class="list-group-item active">
+              <a
+                href="{{ url_for('user_appointments') }}"
+                class="d-block"
+                style="color: #adb5bd; text-decoration: none"
+              >
+                <i class="fas fa-calendar-alt"></i> Book Appointment
+              </a>
+            </li>
+            <li class="list-group-item">
+              <a
+                href="{{ url_for('user_equipments') }}"
+                class="d-block"
+                style="color: #adb5bd; text-decoration: none"
+              >
+                <i class="fas fa-cogs"></i> Borrow Equipments
+              </a>
+            </li>
+            <li class="list-group-item">
+              <a
+                href="{{ url_for('user_feedback') }}"
+                class="d-block"
+                style="color: #adb5bd; text-decoration: none"
+              >
+                <i class="fas fa-comments"></i> Feedback
+              </a>
+            </li>
+            <li class="list-group-item">
+              <a
+                href="{{ url_for('user_notifications') }}"
+                class="d-block"
+                style="color: #adb5bd; text-decoration: none"
+              >
+                <i class="fas fa-bell"></i> Notifications
+              </a>
+            </li>
+            <li class="list-group-item">
+              <a
+                href="{{ url_for('user_settings') }}"
+                class="d-block"
+                style="color: #adb5bd; text-decoration: none"
+              >
+                <i class="fas fa-cogs"></i> Settings
+              </a>
+            </li>
+            <li class="list-group-item">
+              <a
+                href="{{ url_for('logout') }}"
+                class="d-block"
+                style="color: #adb5bd; text-decoration: none"
+              >
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 main-content">
+          <h2>Book an Appointment</h2>
+
+          <!-- Appointment Form -->
+          <form action="{{ url_for('book_appointment') }}" method="POST">
+            <div class="form-group">
+              <label for="user_name">Name:</label>
+              <input
+                type="text"
+                id="user_name"
+                name="user_name"
+                class="form-control"
+                required
+                placeholder="Your Name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="contact_number">Contact Number:</label>
+              <input
+                type="tel"
+                id="contact_number"
+                name="contact_number"
+                class="form-control"
+                required
+                placeholder="Your Contact Number"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="appointment_date">Date:</label>
+              <input
+                type="date"
+                id="appointment_date"
+                name="appointment_date"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="appointment_time">Time:</label>
+              <input
+                type="time"
+                id="appointment_time"
+                name="appointment_time"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              Book Appointment
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
     <footer>
-        <p>&copy; 2024 GymPro</p>
+      <p>&copy; 2024 GymPro. All rights reserved.</p>
     </footer>
-</body>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      // Toggle Sidebar visibility
+      function toggleSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        sidebar.classList.toggle("closed");
+        sidebar.classList.toggle("open");
+      }
+    </script>
+  </body>
 </html>

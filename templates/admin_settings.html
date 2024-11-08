@@ -1,100 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
     <title>Admin Settings - GymPro</title>
-</head>
-<body>
-    <div class="admin-container">
-        <!-- Sidebar -->
-        <div class="admin-sidebar">
-        <h2>GymPro Manager</h2>
-        <nav class="admin-nav">
-            <ul>
-                <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                <li><a href="{{ url_for('admin_membership') }}"><i class="fas fa-users"></i> Membership</a></li>
-                <li><a href="{{ url_for('admin_calendar') }}"><i class="fas fa-calendar-alt"></i> Calendar</a></li>
-                <li><a href="{{ url_for('admin_booking') }}"><i class="fas fa-book"></i> Bookings</a></li>
-                <li><a href="{{ url_for('admin_borrowing') }}"><i class="fas fa-cogs"></i> Borrowing</a></li>
-                <li><a href="{{ url_for('admin_inventory') }}"><i class="fas fa-box"></i> Inventory</a></li>
-                <li><a href="{{ url_for('admin_notifications') }}"><i class="fas fa-bell"></i> Notifications</a></li>
-                <li><a href="{{ url_for('admin_settings') }}" class="active"><i class="fas fa-cog"></i> Settings</a></li>
-                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-            </ul>
-        </nav>
-    </div>
+    <style>
+      /* Custom style to ensure cards take full width */
+      .settings-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Centers cards horizontally */
+      }
+      .card {
+        width: 100%; /* Ensure cards take full width */
+        max-width: 600px; /* Optional: Adjust max width if needed */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        {% include 'includes/adminsidebar.html' %}
 
-        <!-- Main Content -->
-        <main class="admin-main">
-            <header>
-                <h1>Admin Settings</h1>
-            </header>
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <header class="py-3">
+            <h1 class="display-6 text-dark">Admin Settings</h1>
+          </header>
 
-            <!-- Account Settings Section -->
-            <section class="settings-section wider-section">
-                <h2>Account Settings</h2>
-                <form id="changeAdminPasswordForm">
-                    <label for="currentPassword">Current Password:</label>
-                    <input type="password" id="currentPassword" name="currentPassword" required>
+          <section class="settings-section mb-5">
+            <!-- Change Password Form -->
+            <div class="card shadow-sm mb-4">
+              <div class="card-body">
+                <form id="changeAdminPasswordForm" class="mb-3">
+                  <h3 class="h5 mb-3">Change Password</h3>
 
-                    <label for="newPassword">New Password:</label>
-                    <input type="password" id="newPassword" name="newPassword" required>
+                  <div class="mb-3">
+                    <label for="currentPassword" class="form-label"
+                      >Current Password:</label
+                    >
+                    <input
+                      type="password"
+                      id="currentPassword"
+                      name="currentPassword"
+                      class="form-control"
+                      required
+                    />
+                  </div>
 
-                    <button type="submit" class="primary-btn">Change Password</button>
+                  <div class="mb-3">
+                    <label for="newPassword" class="form-label"
+                      >New Password:</label
+                    >
+                    <input
+                      type="password"
+                      id="newPassword"
+                      name="newPassword"
+                      class="form-control"
+                      required
+                    />
+                  </div>
+
+                  <button type="submit" class="btn btn-primary">
+                    Change Password
+                  </button>
                 </form>
+              </div>
+            </div>
 
-                <form id="updateAdminInfoForm">
-                    <label for="adminEmail">Email:</label>
-                    <input type="email" id="adminEmail" name="adminEmail" required>
+            <!-- Update Email Form -->
+            <div class="card shadow-sm mb-4">
+              <div class="card-body">
+                <form id="updateAdminInfoForm" class="mb-3">
+                  <h3 class="h5 mb-3">Update Email</h3>
 
-                    <button type="submit" class="primary-btn">Update Information</button>
+                  <div class="mb-3">
+                    <label for="adminEmail" class="form-label">Email:</label>
+                    <input
+                      type="email"
+                      id="adminEmail"
+                      name="adminEmail"
+                      class="form-control"
+                      required
+                    />
+                  </div>
+
+                  <button type="submit" class="btn btn-primary">
+                    Update Information
+                  </button>
                 </form>
+              </div>
+            </div>
 
-                <form id="enableTwoFAForm">
-                    <label for="twoFA">Enable Two-Factor Authentication:</label>
-                    <input type="checkbox" id="twoFA" name="twoFA">
-                    <button type="submit" class="primary-btn">Save Settings</button>
+            <!-- Enable Two-Factor Authentication Form -->
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <form id="enableTwoFAForm" class="mb-3">
+                  <h3 class="h5 mb-3">Enable Two-Factor Authentication</h3>
+
+                  <div class="mb-3">
+                    <label for="twoFA" class="form-label"
+                      >Enable Two-Factor Authentication:</label
+                    >
+                    <input
+                      type="checkbox"
+                      id="twoFA"
+                      name="twoFA"
+                      class="form-check-input"
+                    />
+                  </div>
+
+                  <button type="submit" class="btn btn-primary">
+                    Save Settings
+                  </button>
                 </form>
-            </section>
+              </div>
+            </div>
+          </section>
 
-            <!-- User Management Section -->
-            <section class="settings-section wider-section">
-                <h2>User Management</h2>
-                <form id="manageUserRolesForm">
-                    <label for="userRoles">User Roles:</label>
-                    <select id="userRoles" name="userRoles">
-                        <option value="admin">Admin</option>
-                        <option value="staff">Staff</option>
-                        <option value="trainer">Trainer</option>
+          <!-- User Management Section -->
+          <section class="settings-section mb-5">
+            <h2 class="h4 mb-4">User Management</h2>
+
+            <!-- User Roles Form -->
+            <div class="card shadow-sm mb-4">
+              <div class="card-body">
+                <form id="manageUserRolesForm" class="mb-3">
+                  <h3 class="h5 mb-3">User Roles</h3>
+
+                  <div class="mb-3">
+                    <label for="userRoles" class="form-label"
+                      >Select Role:</label
+                    >
+                    <select id="userRoles" name="userRoles" class="form-select">
+                      <option value="admin">Admin</option>
+                      <option value="staff">Staff</option>
+                      <option value="trainer">Trainer</option>
                     </select>
-                    <button type="submit" class="primary-btn">Update Roles</button>
-                </form>
+                  </div>
 
-                <form id="manageAdminsForm">
-                    <label for="adminUsers">Manage Admins:</label>
-                    <select id="adminUsers" name="adminUsers">
-                        <option value="add">Add New Admin</option>
-                        <option value="remove">Remove Admin</option>
-                    </select>
-                    <button type="submit" class="primary-btn">Submit</button>
+                  <button type="submit" class="btn btn-primary">
+                    Update Roles
+                  </button>
                 </form>
+              </div>
+            </div>
 
-                <form id="viewLogsForm">
-                    <label for="userActivityLogs">View User Activity Logs:</label>
-                    <select id="userActivityLogs" name="userActivityLogs">
-                        <option value="admin">Admins</option>
-                        <option value="allUsers">All Users</option>
+            <!-- Manage Admins Form -->
+            <div class="card shadow-sm mb-4">
+              <div class="card-body">
+                <form id="manageAdminsForm" class="mb-3">
+                  <h3 class="h5 mb-3">Manage Admins</h3>
+
+                  <div class="mb-3">
+                    <label for="adminUsers" class="form-label">Action:</label>
+                    <select
+                      id="adminUsers"
+                      name="adminUsers"
+                      class="form-select"
+                    >
+                      <option value="add">Add New Admin</option>
+                      <option value="remove">Remove Admin</option>
                     </select>
-                    <button type="submit" class="primary-btn">View Logs</button>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
-            </section>
+              </div>
+            </div>
+
+            <!-- View User Activity Logs Form -->
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <form id="viewLogsForm" class="mb-3">
+                  <h3 class="h5 mb-3">View User Activity Logs</h3>
+
+                  <div class="mb-3">
+                    <label for="userActivityLogs" class="form-label"
+                      >Select User Logs:</label
+                    >
+                    <select
+                      id="userActivityLogs"
+                      name="userActivityLogs"
+                      class="form-select"
+                    >
+                      <option value="admin">Admins</option>
+                      <option value="allUsers">All Users</option>
+                    </select>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary">
+                    View Logs
+                  </button>
+                </form>
+              </div>
+            </div>
+          </section>
         </main>
+      </div>
     </div>
-    <footer>
-        <p>&copy; 2024 GymPro</p>
+
+    <footer class="admin-footer">
+      <p>&copy; 2024 GymPro</p>
     </footer>
-</body>
+  </body>
 </html>

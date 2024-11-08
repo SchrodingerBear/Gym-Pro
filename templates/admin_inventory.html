@@ -1,99 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+
     <title>Inventory Management</title>
-</head>
-<body class="admin-dashboard">
-    <!-- Sidebar -->
-    <div class="admin-sidebar">
-        <h2>GymPro Manager</h2>
-        <nav class="admin-nav">
-            <ul>
-                <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                <li><a href="{{ url_for('admin_membership') }}"><i class="fas fa-users"></i> Membership</a></li>
-                <li><a href="{{ url_for('admin_calendar') }}"><i class="fas fa-calendar-alt"></i> Calendar</a></li>
-                <li><a href="{{ url_for('admin_booking') }}"><i class="fas fa-book"></i> Bookings</a></li>
-                <li><a href="{{ url_for('admin_borrowing') }}"><i class="fas fa-cogs"></i> Borrowing</a></li>
-                <li><a href="{{ url_for('admin_inventory') }}" class="active"><i class="fas fa-box"></i> Inventory</a></li>
-                <li><a href="{{ url_for('admin_notifications') }}"><i class="fas fa-bell"></i> Notifications</a></li>
-                <li><a href="{{ url_for('admin_settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
-                <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-            </ul>
-        </nav>
-    </div>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        {% include 'includes/adminsidebar.html'%}
 
-    <!-- Main Content -->
-    <main class="admin-content">
-        <header class="admin-header">
-            <h1>Inventory Management</h1>
-        </header>
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <header class="py-3">
+            <h1 class="display-6 text-dark">Inventory Management</h1>
+          </header>
 
-        <div class="inventory-box">
-            <h2>Available Items</h2>
-            
-            <!-- Form to add a new item -->
-            <form action="{{ url_for('admin_inventory') }}" method="POST" enctype="multipart/form-data" class="add-item-form">
-                <input type="text" name="item_name" placeholder="Item Name" required>
-                <select name="condition" required>
-                    <option value="">Select Condition</option>
-                    <option value="New">New</option>
-                    <option value="Used">Used</option>
+          <!-- Add New Item Form -->
+          <div class="card p-4 mb-4">
+            <h2 class="mb-3">Add New Item</h2>
+
+            <form
+              action="{{ url_for('admin_inventory') }}"
+              method="POST"
+              enctype="multipart/form-data"
+              class="row g-3"
+            >
+              <div class="col-md-6">
+                <input
+                  type="text"
+                  name="item_name"
+                  class="form-control"
+                  placeholder="Item Name"
+                  required
+                />
+              </div>
+              <div class="col-md-6">
+                <select name="condition" class="form-select" required>
+                  <option value="">Select Condition</option>
+                  <option value="New">New</option>
+                  <option value="Used">Used</option>
                 </select>
-                <input type="number" name="quantity" placeholder="Quantity" required>
-                <input type="file" name="image" accept="image/*">
-                <button type="submit">Add Item</button>
+              </div>
+              <div class="col-md-6">
+                <input
+                  type="number"
+                  name="quantity"
+                  class="form-control"
+                  placeholder="Quantity"
+                  required
+                />
+              </div>
+              <div class="col-md-6">
+                <input
+                  type="file"
+                  name="image"
+                  class="form-control"
+                  accept="image/*"
+                />
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary">Add Item</button>
+              </div>
             </form>
-            <div class="inventory-table">
-                {% if inventory_items %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Item Name</th>
-                            <th>Condition</th>
-                            <th>Quantity</th>
-                            <th>Image</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in inventory_items %}
-                        <tr>
-                            <td>{{ item.id }}</td>
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.condition }}</td>
-                            <td>{{ item.quantity }}</td>
-                            <td>
-                                {% if item.image %}
-                                    <img src="{{ url_for('static', filename='images/' + item.image) }}" alt="{{ item.name }}" width="50">
-                                {% else %}
-                                    No Image
-                                {% endif %}
-                            </td>
-                            <td>
-                                <form action="{{ url_for('delete_inventory_item', item_id=item.id) }}" method="POST">
-                                    <button type="submit" class="delete-btn">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p>No items available in the inventory.</p>
-                {% endif %}
-            </div>
-        </div>
-    </main>
+          </div>
 
+          <!-- Inventory Table -->
+          <div class="card p-4">
+            <h2 class="mb-3">Available Items</h2>
+
+            {% if inventory_items %}
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Item Name</th>
+                    <th>Condition</th>
+                    <th>Quantity</th>
+                    <th>Image</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in inventory_items %}
+                  <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.condition }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>
+                      {% if item.image %}
+                      <img
+                        src="{{ url_for('static', filename='images/' + item.image) }}"
+                        alt="{{ item.name }}"
+                        width="50"
+                      />
+                      {% else %} No Image {% endif %}
+                    </td>
+                    <td>
+                      <form
+                        action="{{ url_for('delete_inventory_item', item_id=item.id) }}"
+                        method="POST"
+                      >
+                        <button type="submit" class="btn btn-danger btn-sm">
+                          Delete
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <p>No items available in the inventory.</p>
+            {% endif %}
+          </div>
+        </main>
+      </div>
+    </div>
     <!-- Footer -->
     <footer class="admin-footer">
-        <p>&copy; 2024 GymPro</p>
+      <p>&copy; 2024 GymPro</p>
     </footer>
-</body>
+  </body>
 </html>
