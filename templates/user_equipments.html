@@ -1,113 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_equipments.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Borrow Equipments</title>
-</head>
-<body>
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-messages">
-                {% for category, message in messages %}
-                    <div class="flash flash-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-    
-    <header class="dashboard-header">
-        <h1>Borrow Equipments</h1>
-        <nav>
-            <ul>
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('logout') }}">Logout</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <aside class="sidebar">
-        <ul>
-            <li><a href="{{ url_for('user_dashboard') }}"><i class="icon-dashboard"></i> Dashboard</a></li>
-            <li><a href="{{ url_for('user_appointments') }}"><i class="icon-calendar"></i> Book Appointment</a></li>
-            <li><a href="{{ url_for('user_equipments') }}" class="active"><i class="icon-equipment"></i> Borrow Equipments</a></li>
-            <li><a href="{{ url_for('user_feedback') }}"><i class="icon-feedback"></i> Feedback</a></li>
-            <li><a href="{{ url_for('user_notifications') }}"><i class="icon-notifications"></i> Notifications</a></li>
-            <li><a href="{{ url_for('user_settings') }}"><i class="icon-settings"></i> Settings</a></li>
-        </ul>
-    </aside>
-
-    <main class="dashboard-content">
-        <section class="equipments-section">
-            {% for equipment in equipment_list %}
-                <div class="equipment-card">
-                    <img src="{{ url_for('static', filename='images/' + (equipment.image if equipment.image else 'default.png')) }}" alt="{{ equipment.name }}">
-
-                    <h2>{{ equipment.name }}</h2>
-                    {% if equipment.quantity > 0 %}
-                        <button class="borrow-button" onclick="openBorrowModal('{{ equipment.id }}')">Borrow Now</button>
-                    {% else %}
-                        <button class="borrow-button" disabled>Out of Stock</button>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </section>
-    </main>
-    <!-- Modal for Borrow Form -->
-<div id="borrowModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h2>Borrow Equipment</h2>
-        <form id="borrowForm">
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required><br><br>
-            <label for="contact">Contact Number:</label>
-            <input type="tel" id="contact" name="contact" required><br><br>
-            <label for="borrowDate">Borrow Date:</label>
-            <input type="date" id="borrowDate" name="borrowDate" required><br><br>
-            <label for="returnDate">Return Date:</label>
-            <input type="date" id="returnDate" name="returnDate" required><br><br>
-            <button type="submit">Submit</button>
-        </form>
-    </div>
-</div>
-    <div id="borrowModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeBorrowModal()">&times;</span>
-            <h2>Borrow Equipment</h2>
-            <form action="{{ url_for('submit_borrow_request') }}" method="POST">
-                <input type="hidden" name="equipment_id" id="modalEquipmentId">
-                <label for="returnDate">Return Date:</label>
-                <input type="date" name="return_date" required>
-                <button type="submit">Submit</button>
-            </form>            
+  </head>
+  <body>
+    <!-- Navbar Section -->
+    <nav
+      class="navbar navbar-expand-lg navbar-dark"
+      style="background-color: #0c0920"
+    >
+      <div class="container">
+        <a class="navbar-brand" href="#">Borrow Equipment</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+          onclick="toggleSidebar()"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ml-auto">
+            <!-- Home and Logout removed from Navbar -->
+          </ul>
         </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid dashboard-content">
+      {% include 'includes/sidebar.html'%}
+
+      <!-- Main Content -->
+      <div class="col-md-9 main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if
+        messages %}
+        <div
+          class="alert alert-success alert-dismissible fade show"
+          role="alert"
+        >
+          <strong>Success!</strong>
+          {% for category, message in messages %} {{ message }} {% endfor %}
+          <button
+            type="button"
+            class="close"
+            data-dismiss="alert"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        {% endif %} {% endwith %}
+
+        <h2>Borrow Equipment</h2>
+
+        <section class="equipments-section row">
+          {% for equipment in equipment_list %}
+          <div class="equipment-card col-md-4 mb-4">
+            <div class="card h-100">
+              <img
+                src="{{ url_for('static', filename='images/' + (equipment.image if equipment.image else 'default.png')) }}"
+                alt="{{ equipment.name }}"
+                class="card-img-top img-fluid"
+              />
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ equipment.name }}</h5>
+                <div class="mt-auto">
+                  {% if equipment.quantity > 0 %}
+                  <button
+                    class="btn btn-primary col-12"
+                    onclick="openBorrowModal('{{ equipment.id }}')"
+                  >
+                    Borrow Now
+                  </button>
+                  {% else %}
+                  <button class="btn btn-secondary" disabled>
+                    Out of Stock
+                  </button>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </section>
+
+        <style>
+          .card-img-top {
+            object-fit: cover;
+            height: 200px; /* Adjust this value as necessary */
+          }
+        </style>
+      </div>
+    </div>
+
+    <!-- Modal for Borrow Form -->
+    <div
+      id="borrowModal"
+      class="modal fade"
+      tabindex="-1"
+      aria-labelledby="borrowModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="borrowModalLabel">Borrow Equipment</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form action="{{ url_for('submit_borrow_request') }}" method="POST">
+              <input type="hidden" name="equipment_id" id="modalEquipmentId" />
+              <div class="form-group">
+                <label for="name">Name:</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="contact">Contact Number:</label>
+                <input
+                  value="63"
+                  type="tel"
+                  id="contact"
+                  name="contact"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="borrowDate">Borrow Date:</label>
+                <input
+                  type="date"
+                  id="borrowDate"
+                  name="borrowDate"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="returnDate">Return Date:</label>
+                <input
+                  type="date"
+                  id="returnDate"
+                  name="return_date"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <button type="submit" class="col col-12 btn btn-primary">
+                Submit
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
 
     <footer>
-        <p>&copy; 2024 GymPro</p>
+      <p>&copy; 2024 GymPro</p>
     </footer>
 
     <script>
-        function openBorrowModal(equipmentId) {
-            document.getElementById("modalEquipmentId").value = equipmentId;
-            document.getElementById("borrowModal").style.display = "block";
-        }
+      function openBorrowModal(equipmentId) {
+        document.getElementById("modalEquipmentId").value = equipmentId;
+        $("#borrowModal").modal("show"); // Open modal using Bootstrap's jQuery method
+      }
 
-        function closeBorrowModal() {
-            document.getElementById("borrowModal").style.display = "none";
-        }
+      function closeBorrowModal() {
+        $("#borrowModal").modal("hide"); // Close modal using Bootstrap's jQuery method
+      }
 
-        window.onclick = function(event) {
-            const modal = document.getElementById("borrowModal");
-            if (event.target == modal) {
-                closeBorrowModal();
-            }
+      $(document).on("click", function (event) {
+        const modal = $("#borrowModal");
+        if ($(event.target).closest(modal).length === 0) {
+          closeBorrowModal();
         }
+      });
     </script>
-</body>
+  </body>
 </html>

@@ -3,38 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+
     <title>Borrowing Management</title>
   </head>
   <body>
     <div class="container-fluid">
       <div class="row">
-        {% include 'includes/adminsidebar.html'%}
+        {% include 'includes/adminsidebar.html' %}
 
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
           <header class="py-3">
             <h1 class="display-6 text-dark">Borrowing Management</h1>
           </header>
 
-          <!-- Flash Messages -->
-          {% with messages = get_flashed_messages(with_categories=true) %} {% if
-          messages %}
-          <div class="flash-messages">
-            {% for category, message in messages %}
-            <div class="flash flash-{{ category }}">{{ message }}</div>
-            {% endfor %}
-          </div>
-          {% endif %} {% endwith %}
-
           <div class="card p-4">
-            <!-- Borrowing Table -->
+            <!-- Borrowing Table with Actions and Status Column -->
             <div class="borrowing-table">
-              <table class="table table-striped">
+              <table id="borrowingDataTable" class="table table-striped">
                 <thead>
                   <tr>
                     <th>User ID</th>
                     <th>Equipment Name</th>
                     <th>Date Borrowed</th>
                     <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody id="borrowingsList">
@@ -44,6 +38,17 @@
                     <td>{{ borrow.equipment.name }}</td>
                     <td>{{ borrow.borrow_date.strftime('%Y-%m-%d') }}</td>
                     <td>{{ borrow.return_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ borrow.status }}</td>
+                    <td>
+                      <form action="" method="POST">
+                        <select class="form-select" name="status" id="statusSelect_{{ borrow.id }}">
+                          <option value="pending"  {% if borrow.status == 0%}selected{% endif %}>Pending</option>
+                          <option value="pending"  {% if borrow.status == 1%}selected{% endif %}>Returned</option>
+                          <option value="accepted" >Send Notification</option>
+                        </select>
+                        <input type="hidden" name="booking_id" value="{{ borrow.id }}">
+                      </form>
+                    </td>
                   </tr>
                   {% endfor %}
                 </tbody>
@@ -57,5 +62,14 @@
     <footer class="admin-footer">
       <p>&copy; 2024 GymPro</p>
     </footer>
+
+    <!-- Add DataTables and Bootstrap JS libraries -->
+
+    <script>
+      $(document).ready(function () {
+        $("#borrowingDataTable").DataTable();
+      });
+
+    </script>
   </body>
 </html>

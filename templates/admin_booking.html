@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+
     <title>Booking Management</title>
 </head>
 <body class="admin-dashboard">
@@ -22,7 +24,7 @@
   
       <!-- Bookings Table -->
       <div class="booking-table">
-        <table class="table table-striped">
+        <table class="table table-striped" id="table">
           <thead>
             <tr>
               <th>Booking ID</th>
@@ -43,7 +45,7 @@
               <td>{{ booking.status.capitalize() }}</td>
               <td>
                 <form action="{{ url_for('update_booking_status', booking_id=booking.id) }}" method="POST">
-                  <select name="status" id="statusSelect_{{ booking.id }}">
+                  <select class="form-select" name="status" id="statusSelect_{{ booking.id }}">
                     <option value="pending" {% if booking.status.lower() == 'pending' %}selected{% endif %}>Pending</option>
                     <option value="accepted" {% if booking.status.lower() == 'accepted' %}selected{% endif %}>Accept</option>
                     <option value="rejected" {% if booking.status.lower() == 'rejected' %}selected{% endif %}>Reject</option>
@@ -154,6 +156,9 @@
           });
       }
     });
+    $(document).ready(function () {
+        $("#table").DataTable();
+      });
   </script>
   
     <!-- Footer -->

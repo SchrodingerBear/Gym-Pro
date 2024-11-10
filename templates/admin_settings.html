@@ -11,203 +11,145 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
     />
-    <title>Admin Settings - GymPro</title>
-    <style>
-      /* Custom style to ensure cards take full width */
-      .settings-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center; /* Centers cards horizontally */
-      }
-      .card {
-        width: 100%; /* Ensure cards take full width */
-        max-width: 600px; /* Optional: Adjust max width if needed */
-      }
-    </style>
+
+    <title>Setting</title>
   </head>
   <body>
     <div class="container-fluid">
       <div class="row">
-        {% include 'includes/adminsidebar.html' %}
+        {% include 'includes/adminsidebar.html'%}
 
-        <!-- Main content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
           <header class="py-3">
-            <h1 class="display-6 text-dark">Admin Settings</h1>
+            <h1 class="display-6 text-dark">Setting</h1>
           </header>
 
-          <section class="settings-section mb-5">
-            <!-- Change Password Form -->
-            <div class="card shadow-sm mb-4">
-              <div class="card-body">
-                <form id="changeAdminPasswordForm" class="mb-3">
-                  <h3 class="h5 mb-3">Change Password</h3>
+          <!-- Add New Item Form -->
+          <div class="card p-4 mb-4">
 
-                  <div class="mb-3">
-                    <label for="currentPassword" class="form-label"
-                      >Current Password:</label
-                    >
+            <form action="../updateuser" method="post">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="userId">
+                      <i class="fas fa-id-card"></i>
+                      {% if user.role != 'user' %}
+                        Username:
+                      {% else %}
+                        ID Number:
+                      {% endif %}
+                    </label>
+                    
                     <input
-                      type="password"
-                      id="currentPassword"
-                      name="currentPassword"
+                      {% if user.role != 'user' %}
+                      {% else %}
+                      readonly
+
+                      {% endif %}
+
+                      type="text"
                       class="form-control"
+                      id="userlogin"
+                      name="userlogin"
+                      value="{{ user.id_number }}"
+                      required
+                    />
+                    
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="firstName"><i class="fas fa-user"></i> First Name:</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="firstName"
+                      name="firstName"
+                      value="{{ user.firstname }}"
                       required
                     />
                   </div>
+                </div>
+              </div>
 
-                  <div class="mb-3">
-                    <label for="newPassword" class="form-label"
-                      >New Password:</label
-                    >
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="lastName"><i class="fas fa-user"></i> Last Name:</label>
                     <input
-                      type="password"
-                      id="newPassword"
-                      name="newPassword"
+                      type="text"
                       class="form-control"
+                      id="lastName"
+                      name="lastName"
+                      value="{{ user.lastname }}"
                       required
                     />
                   </div>
-
-                  <button type="submit" class="btn btn-primary">
-                    Change Password
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            <!-- Update Email Form -->
-            <div class="card shadow-sm mb-4">
-              <div class="card-body">
-                <form id="updateAdminInfoForm" class="mb-3">
-                  <h3 class="h5 mb-3">Update Email</h3>
-
-                  <div class="mb-3">
-                    <label for="adminEmail" class="form-label">Email:</label>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="birthdate"><i class="fas fa-calendar-alt"></i> Birthdate:</label>
                     <input
-                      type="email"
-                      id="adminEmail"
-                      name="adminEmail"
+                      type="date"
                       class="form-control"
+                      id="birthdate"
+                      name="birthdate"
+                      value="{{ user.date_of_birth.strftime('%Y-%m-%d') }}"
                       required
                     />
                   </div>
-
-                  <button type="submit" class="btn btn-primary">
-                    Update Information
-                  </button>
-                </form>
+                </div>
               </div>
-            </div>
 
-            <!-- Enable Two-Factor Authentication Form -->
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <form id="enableTwoFAForm" class="mb-3">
-                  <h3 class="h5 mb-3">Enable Two-Factor Authentication</h3>
-
-                  <div class="mb-3">
-                    <label for="twoFA" class="form-label"
-                      >Enable Two-Factor Authentication:</label
-                    >
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="gender"><i class="fas fa-genderless"></i> Gender:</label>
+                    <select class="form-control" id="gender" name="gender" required>
+                      <option value="male" {% if user.gender == 'male' %}selected{% endif %}>Male</option>
+                      <option value="female" {% if user.gender == 'female' %}selected{% endif %}>Female</option>
+                      <option value="other" {% if user.gender == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="contactNumber"><i class="fas fa-phone"></i> Contact Number:</label>
                     <input
-                      type="checkbox"
-                      id="twoFA"
-                      name="twoFA"
-                      class="form-check-input"
+                      type="text"
+                      class="form-control"
+                      id="contactNumber"
+                      name="contactNumber"
+                      value="{{ user.contact_number }}"
+                      required
                     />
                   </div>
-
-                  <button type="submit" class="btn btn-primary">
-                    Save Settings
-                  </button>
-                </form>
+                </div>
               </div>
-            </div>
-          </section>
 
-          <!-- User Management Section -->
-          <section class="settings-section mb-5">
-            <h2 class="h4 mb-4">User Management</h2>
-
-            <!-- User Roles Form -->
-            <div class="card shadow-sm mb-4">
-              <div class="card-body">
-                <form id="manageUserRolesForm" class="mb-3">
-                  <h3 class="h5 mb-3">User Roles</h3>
-
-                  <div class="mb-3">
-                    <label for="userRoles" class="form-label"
-                      >Select Role:</label
-                    >
-                    <select id="userRoles" name="userRoles" class="form-select">
-                      <option value="admin">Admin</option>
-                      <option value="staff">Staff</option>
-                      <option value="trainer">Trainer</option>
-                    </select>
-                  </div>
-
-                  <button type="submit" class="btn btn-primary">
-                    Update Roles
-                  </button>
-                </form>
+              <div class="form-group mb-3">
+                <label for="newPassword"><i class="fas fa-key"></i> Password:</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="newPassword"
+                  name="newPassword"
+                  value="{{ user.password }}"
+                  required
+                />
               </div>
-            </div>
 
-            <!-- Manage Admins Form -->
-            <div class="card shadow-sm mb-4">
-              <div class="card-body">
-                <form id="manageAdminsForm" class="mb-3">
-                  <h3 class="h5 mb-3">Manage Admins</h3>
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-save"></i> Update Settings
+              </button>
+            </form>
+          </div>
 
-                  <div class="mb-3">
-                    <label for="adminUsers" class="form-label">Action:</label>
-                    <select
-                      id="adminUsers"
-                      name="adminUsers"
-                      class="form-select"
-                    >
-                      <option value="add">Add New Admin</option>
-                      <option value="remove">Remove Admin</option>
-                    </select>
-                  </div>
-
-                  <button type="submit" class="btn btn-primary">Submit</button>
-                </form>
-              </div>
-            </div>
-
-            <!-- View User Activity Logs Form -->
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <form id="viewLogsForm" class="mb-3">
-                  <h3 class="h5 mb-3">View User Activity Logs</h3>
-
-                  <div class="mb-3">
-                    <label for="userActivityLogs" class="form-label"
-                      >Select User Logs:</label
-                    >
-                    <select
-                      id="userActivityLogs"
-                      name="userActivityLogs"
-                      class="form-select"
-                    >
-                      <option value="admin">Admins</option>
-                      <option value="allUsers">All Users</option>
-                    </select>
-                  </div>
-
-                  <button type="submit" class="btn btn-primary">
-                    View Logs
-                  </button>
-                </form>
-              </div>
-            </div>
-          </section>
+      
         </main>
       </div>
     </div>
-
+    <!-- Footer -->
     <footer class="admin-footer">
       <p>&copy; 2024 GymPro</p>
     </footer>

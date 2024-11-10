@@ -3,98 +3,103 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Bootstrap CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/user_style.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-    />
     <title>User Dashboard</title>
-    <script>
-      async function fetchUserDashboardData() {
-        try {
-          const response = await fetch("/user/dashboard/data");
-          if (!response.ok) throw new Error("Network response was not ok");
-          const data = await response.json();
-          document.getElementById("userBorrowedCount").innerText =
-            data.borrowed_count || 0;
-          document.getElementById("upcoming-appointments").innerText =
-            data.upcoming_appointments || 0;
-          document.getElementById("notifications").innerText =
-            data.notifications || 0;
-        } catch (error) {
-          console.error("Error fetching user dashboard data:", error);
-        }
-      }
-      setInterval(fetchUserDashboardData, 5000);
-      window.onload = fetchUserDashboardData;
-    </script>
   </head>
   <body>
-    <aside class="sidebar">
-      <ul>
-        <li>
-          <a href="{{ url_for('user_dashboard') }}" class="active"
-            ><i class="icon-dashboard"></i> Dashboard</a
-          >
-        </li>
-        <li>
-          <a href="{{ url_for('user_appointments') }}"
-            ><i class="icon-calendar"></i> Book Appointment</a
-          >
-        </li>
-        <li>
-          <a href="{{ url_for('user_equipments') }}"
-            ><i class="icon-equipment"></i> Borrow Equipments</a
-          >
-        </li>
-        <li>
-          <a href="{{ url_for('user_feedback') }}"
-            ><i class="icon-feedback"></i> Feedback</a
-          >
-        </li>
-        <li>
-          <a href="{{ url_for('user_notifications') }}"
-            ><i class="icon-notifications"></i> Notifications</a
-          >
-        </li>
-        <li>
-          <a href="{{ url_for('user_settings') }}"
-            ><i class="icon-settings"></i> Settings</a
-          >
-        </li>
-      </ul>
-    </aside>
+    <!-- Navbar Section -->
+    <nav
+      class="navbar navbar-expand-lg navbar-dark"
+      style="background-color: #0c0920"
+    >
+      <div class="container">
+        <a class="navbar-brand" href="#">Appointment </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+          onclick="toggleSidebar()"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ml-auto">
+            <!-- Home and Logout removed from Navbar -->
+          </ul>
+        </div>
+      </div>
+    </nav>
 
-    <div class="dashboard-content">
-      <header class="dashboard-header py-3">
-        <h1>Your Dashboard</h1>
-      </header>
-      <main class="container py-4">
-        <section class="dashboard-stats row" aria-label="Dashboard Statistics">
-          <article class="stats-item col-md-4 mb-4" aria-live="polite">
-            <i class="icon-calendar fa-2x" style="color: #4caf50"></i>
-            <p>
-              Upcoming Appointments: <span id="upcoming-appointments">0</span>
-            </p>
-          </article>
-          <article class="stats-item col-md-4 mb-4" aria-live="polite">
-            <i class="icon-equipment fa-2x" style="color: #ff9800"></i>
-            <p>Borrowed Equipment: <span id="userBorrowedCount">0</span></p>
-          </article>
-          <article class="stats-item col-md-4 mb-4" aria-live="polite">
-            <i class="icon-notifications fa-2x" style="color: #2196f3"></i>
-            <p>Notifications: <span id="notifications">0</span></p>
-          </article>
-        </section>
-      </main>
+    <div class="container-fluid min-vh-100 d-flex flex-column">
+      <div class="row flex-grow-1">
+        <!-- Sidebar Section -->
+        {% include 'includes/sidebar.html' %}
+
+        <!-- Dashboard Content -->
+        <div
+          class="col-lg-10 col-md-9 col-sm-12 mx-auto d-flex flex-column align-items-center"
+        >
+          <header class="dashboard-header py-3 text-center">
+            <h1 class="display-4">Your Dashboard</h1>
+          </header>
+
+          <main class="container py-4">
+            <!-- Dashboard Statistics Section -->
+            <section
+              class="dashboard-stats row text-center"
+              aria-label="Dashboard Statistics"
+            >
+              <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-body">
+                    <i
+                      class="fas fa-calendar-alt fa-2x mb-3"
+                      style="color: #4caf50"
+                    ></i>
+                    <h5 class="card-title">Upcoming Appointments</h5>
+                    <p class="card-text">
+                      <span id="upcoming-appointments"
+                        >{{ appointment_count }}</span
+                      >
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-body">
+                    <i
+                      class="fas fa-toolbox fa-2x mb-3"
+                      style="color: #ff9800"
+                    ></i>
+                    <h5 class="card-title">Borrowed Equipment</h5>
+                    <p class="card-text">
+                      <span id="userBorrowedCount">{{ borrow_count }}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-body">
+                    <i
+                      class="fas fa-bell fa-2x mb-3"
+                      style="color: #2196f3"
+                    ></i>
+                    <h5 class="card-title">Notifications</h5>
+                    <p class="card-text">
+                      <span id="notifications">{{ notification_count }}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
     </div>
 
     <!-- Bootstrap JS and dependencies -->
