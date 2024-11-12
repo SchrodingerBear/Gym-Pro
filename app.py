@@ -13,12 +13,15 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from sqlalchemy import text
+from flask import request
+from flask import render_template, request, session
+from sqlalchemy.orm import joinedload
 
 
 app = Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root@localhost/gympro"
-# app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://dorsugympromanag:FtY$aydW!$9JhF#@dorsugympromanager.mysql.pythonanywhere-services.com/dorsugympromanag$gympro"
+
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "your_secret_key"
@@ -26,6 +29,16 @@ app.config["UPLOAD_FOLDER"] = "static/images"
 
 
 db = SQLAlchemy(app)
+
+
+class Feedback(db.Model):
+    __tablename__ = "feedback"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    message = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship("User", backref="feedbacks", lazy=True)
 
 
 class User(db.Model):
@@ -41,6 +54,17 @@ class User(db.Model):
     role = db.Column(db.String(20), default="user")
     membership_status = db.Column(db.String(50), default="active")
     next_appointment = db.Column(db.DateTime)
+
+
+class Notification(db.Model):
+    __tablename__ = "notifications"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    message = db.Column(db.String(255), nullable=False)
+    seen = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship("User", backref="notifications")
 
 
 class Member(db.Model):
@@ -62,12 +86,13 @@ class Appointment(db.Model):
 class EquipmentBorrowing(db.Model):
     __tablename__ = "equipment_borrowing"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    status = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
     equipment_id = db.Column(db.Integer, db.ForeignKey("inventory.id"), nullable=False)
     borrow_date = db.Column(db.DateTime, default=datetime.utcnow)
-    equipment = db.relationship("Inventory", backref="borrowings")
-    return_date = db.Column(db.DateTime, nullable=True)
+    return_date = db.Column(db.DateTime)
+    status = db.Column(db.Integer, nullable=False, default="pending")
+
+    inventory = db.relationship("Inventory", backref="borrowings")
 
 
 class Inventory(db.Model):
@@ -82,16 +107,16 @@ class Inventory(db.Model):
 
 from datetime import datetime
 
-
-class Notification(db.Model):
-    __tablename__ = "notifications"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    message = db.Column(db.String(255), nullable=False)
-    seen = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-
+def serialize_booking(booking):
+    return {
+        'member_name': booking.member_name,
+        'user_name': booking.user_name,
+        'contact_number': booking.contact_number,
+        'appointment_date': booking.appointment_date.strftime('%Y-%m-%d'),
+        'appointment_time': booking.appointment_time.strftime('%H:%M:%S'),
+        'message': booking.message,
+        'status': booking.status,
+    }
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     member_name = db.Column(db.String(100), nullable=False)
@@ -113,42 +138,6 @@ class Equipment(db.Model):
 
 def __repr__(self):
     return f"<Equipment {self.name}>"
-
-
-def borrow_equipment(user_id, equipment_id):
-
-    result = db.session.execute(
-        text("SELECT quantity FROM inventory WHERE id = :id"), {"id": equipment_id}
-    )
-    quantity = result.fetchone()[0]
-
-    if quantity and quantity > 0:
-        new_quantity = quantity - 1
-
-        db.session.execute(
-            text("UPDATE inventory SET quantity = :quantity WHERE id = :id"),
-            {"quantity": new_quantity, "id": equipment_id},
-        )
-
-        if new_quantity == 0:
-            db.session.execute(
-                text(
-                    "UPDATE inventory SET availability_status = 'Unavailable' WHERE id = :id"
-                ),
-                {"id": equipment_id},
-            )
-
-        db.session.execute(
-            text(
-                "INSERT INTO borrowing (user_id, equipment_id) VALUES (:user_id, :equipment_id)"
-            ),
-            {"user_id": user_id, "equipment_id": equipment_id},
-        )
-
-        db.session.commit()
-        return "Borrow successful!"
-    else:
-        return "Item is unavailable!"
 
 
 @app.route("/home")
@@ -246,13 +235,57 @@ def signup():
     return render_template("signup2.html")
 
 
+@app.route("/returnitem", methods=["POST"])
+def returnitem():
+    borrowing_id = request.form.get("id")
+    print(f"Received borrowing ID: {borrowing_id}")
+
+    borrowing = EquipmentBorrowing.query.get(borrowing_id)
+
+    if borrowing:
+
+        borrowing.status = "returned"
+        borrowing.return_date = datetime.utcnow()
+
+        result = db.session.execute(
+            text("SELECT quantity FROM inventory WHERE id = :id"),
+            {"id": borrowing.equipment_id},
+        )
+        quantity = result.fetchone()[0]
+
+        if quantity is not None:
+            new_quantity = quantity + 1
+            db.session.execute(
+                text("UPDATE inventory SET quantity = :quantity WHERE id = :id"),
+                {"quantity": new_quantity, "id": borrowing.equipment_id},
+            )
+
+        db.session.commit()
+
+        flash("Borrowing record updated successfully!", "success")
+        return jsonify(
+            {
+                "message": "Borrowing record updated successfully",
+                "borrowing_id": borrowing_id,
+            }
+        )
+    else:
+        flash("Borrowing record not found", "error")
+        return (
+            jsonify(
+                {"message": "Borrowing record not found", "borrowing_id": borrowing_id}
+            ),
+            404,
+        )
+
+
 @app.route("/admin/data")
 def admin_data():
 
     if "user_id" in session and session.get("role") == "admin":
         total_members = User.query.count()
         total_bookings = Booking.query.count()
-        total_equipment = Equipment.query.count()
+        total_equipment = EquipmentBorrowing.query.filter_by(status="pending").count()
 
         return jsonify(
             {
@@ -297,10 +330,10 @@ def user_dashboard():
         user = db.session.get(User, session["user_id"])
         if user:
             appointment_count = Booking.query.filter_by(
-                member_name=session["user_id"]
+                member_name=session["user_id"], status="accepted"
             ).count()
             borrow_count = EquipmentBorrowing.query.filter_by(
-                user_id=session["user_id"]
+                user_id=session["user_id"], status="pending"
             ).count()
             notification_count = Notification.query.filter_by(
                 user_id=session["user_id"]
@@ -319,6 +352,46 @@ def user_dashboard():
     else:
         flash("Access denied. Users only.")
         return redirect(url_for("login"))
+
+
+@app.route("/tables")
+def tables():
+    page = request.args.get("page")
+    user_id = session.get("user_id")
+
+    if page == "appointments":
+        appointments = Booking.query.filter_by(member_name=user_id).all()
+        print("Appointments:")
+        for appointment in appointments:
+            for column in Booking.__table__.columns:
+                print(f"{column.name}: {getattr(appointment, column.name)}")
+            print("------")
+
+        return render_template("tables.html", data=appointments, page="appointments")
+
+    elif page == "borrowed":
+
+        borrowings = (
+            EquipmentBorrowing.query.filter(
+                EquipmentBorrowing.user_id == user_id,
+                EquipmentBorrowing.status != "returned",
+            )
+            .options(joinedload(EquipmentBorrowing.inventory))
+            .all()
+        )
+
+        print("Borrowings:")
+        for borrowing in borrowings:
+            for column in EquipmentBorrowing.__table__.columns:
+                print(f"{column.name}: {getattr(borrowing, column.name)}")
+            if borrowing.inventory:
+                print(f"Equipment Name: {borrowing.inventory.name}")
+            print("------")
+
+        return render_template("tables.html", data=borrowings, page="borrowed")
+
+    else:
+        return "Invalid page", 404
 
 
 @app.route("/updateuser", methods=["GET", "POST"])
@@ -343,7 +416,7 @@ def updateuser():
         if birthdate:
             user.date_of_birth = birthdate
         if gender:
-            user.gender = gender
+            user.gder = gender
         if contact_number:
             user.contact_number = contact_number
 
@@ -445,9 +518,18 @@ def get_members():
 @app.route("/admin/membership")
 def admin_membership():
     if "user_id" in session and session.get("role") == "admin":
-
         members = User.query.filter(User.role != "admin").all()
-        return render_template("admin_membership.html", members=members)
+
+        excluded_columns = ["password", "role", "membership_status", "next_appointment"]
+        column_headers = [
+            column.name
+            for column in User.__table__.columns
+            if column.name not in excluded_columns
+        ]
+
+        return render_template(
+            "admin_membership.html", members=members, column_headers=column_headers
+        )
     else:
         flash("Access denied. Admins only.")
         return redirect(url_for("login"))
@@ -491,11 +573,25 @@ def edit_member(id):
 @app.route("/admin/calendar")
 def admin_calendar():
     if "user_id" in session and session.get("role") == "admin":
-        return render_template("admin_calendar.html")
+        today = date.today()
+
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return "Please log in first", 401
+
+        
+        appointments = Booking.query.filter(Booking.appointment_date >= today).all()
+
+        
+        serialized_appointments = []
+        for appointment in appointments:
+            serialized_appointments.append(serialize_booking(appointment))
+
+        return render_template("admin_calendar.html", appointments=serialized_appointments)
     else:
         flash("Access denied. Admins only.")
         return redirect(url_for("login"))
-
 
 @app.route("/admin_booking")
 def admin_booking():
@@ -525,7 +621,9 @@ def update_booking_status(booking_id):
             solution = request.form.get("solution", "No solution provided")
 
             notification_message = f"Your booking request has been rejected. Reason: {rejection_reason}. Solution: {solution}."
-            notification = Notification(user_id=user.id, message=notification_message)
+            notification = Notification(
+                user_id=booking.member_name, message=notification_message
+            )
             db.session.add(notification)
 
             db.session.delete(booking)
@@ -559,34 +657,6 @@ def admin_borrowing():
     else:
         flash("Access denied.", "error")
         return redirect(url_for("login"))
-
-
-@app.route("/borrow_equipment", methods=["POST"])
-def borrow_equipment():
-
-    if "user_id" not in session:
-        flash("Please log in to borrow equipment.", "error")
-        return redirect(url_for("login"))
-
-    user_id = session["user_id"]
-    equipment_id = request.form.get("equipment_id")
-    return_date = request.form.get("returnDate")
-
-    if not return_date:
-        flash("Please select a return date.", "error")
-        return redirect(url_for("borrow_equipment"))
-
-    new_borrowing = EquipmentBorrowing(
-        user_id=user_id,
-        equipment_id=equipment_id,
-        return_date=datetime.strptime(return_date, "%Y-%m-%d"),
-    )
-
-    db.session.add(new_borrowing)
-    db.session.commit()
-
-    flash("Borrow request submitted successfully!", "success")
-    return redirect(url_for("user_equipments"))
 
 
 @app.route("/admin/inventory", methods=["GET", "POST"])
@@ -645,8 +715,14 @@ def delete_inventory_item(item_id):
 
 @app.route("/admin/notifications")
 def admin_notifications():
+    notifications = Notification.query.all()
 
-    return render_template("admin_notifications.html")
+    for notification in notifications:
+        print(
+            f"ID: {notification.id}, User ID: {notification.user_id}, Message: {notification.message}, Seen: {notification.seen}, Created At: {notification.created_at}"
+        )
+
+    return render_template("admin_notifications.html", notifications=notifications)
 
 
 @app.route("/admin/settings")
@@ -690,9 +766,37 @@ def upload_profile_picture():
     pass
 
 
+from datetime import date
+
+
 @app.route("/user_appointments", methods=["GET"])
 def user_appointments():
-    return render_template("user_appointments.html")
+
+    today = date.today()
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+
+        return "Please log in first", 401
+
+    existing_booking = Booking.query.filter_by(
+        member_name=user_id, appointment_date=today
+    ).first()
+
+    if existing_booking:
+
+        return render_template("user_appointments.html", bookedalready=True)
+
+    appointments_today = Booking.query.filter_by(appointment_date=today).all()
+
+    appointment_count = len(appointments_today)
+
+    full = False
+    if appointment_count >= 10:
+        full = True
+
+    return render_template("user_appointments.html", full=full, bookedalready=False)
 
 
 @app.route("/book_appointment", methods=["POST"])
@@ -730,6 +834,21 @@ def submit_borrow_request():
     equipment_id = request.form.get("equipment_id")
     return_date = request.form.get("return_date")
 
+    result = db.session.execute(
+        text("SELECT quantity FROM inventory WHERE id = :id"), {"id": equipment_id}
+    )
+    quantity = result.fetchone()[0]
+
+    if quantity is None or quantity <= 0:
+        flash("Equipment is out of stock!", "error")
+        return redirect(url_for("user_equipments"))
+
+    new_quantity = quantity - 1
+
+    db.session.execute(
+        text("UPDATE inventory SET quantity = :quantity WHERE id = :id"),
+        {"quantity": new_quantity, "id": equipment_id},
+    )
     new_borrowing = EquipmentBorrowing(
         user_id=user_id,
         equipment_id=equipment_id,
@@ -797,6 +916,47 @@ def delete_notification(notification_id):
         )
 
 
+@app.route("/borrowactions", methods=["POST"])
+def borrow_actions():
+    booking_id = request.form.get("booking_id")
+    user_id = request.form.get("user_id")
+    status = request.form.get("status")
+    borrowing_record = EquipmentBorrowing.query.filter_by(id=booking_id).first()
+
+    if borrowing_record:
+
+        message = ""
+
+        if status == "accepted":
+            borrowing_record.status = "accepted"
+            message = f"Your borrowing request for item '{borrowing_record.inventory.name}' has been accepted."
+
+        elif status == "returned":
+            borrowing_record.status = "returned"
+            message = f"Your borrowed item '{borrowing_record.inventory.name}' has been returned successfully."
+
+        elif (
+            borrowing_record.return_date
+            and borrowing_record.return_date < datetime.utcnow()
+            and borrowing_record.status != "returned"
+        ):
+
+            message = f"Reminder: The item '{borrowing_record.inventory.name}' is overdue and must be returned."
+
+        if message:
+            notification = Notification(
+                user_id=borrowing_record.user_id, message=message
+            )
+            db.session.add(notification)
+
+        db.session.commit()
+        flash("Borrowing record updated and user notified successfully.", "success")
+    else:
+        flash("Borrowing record not found.", "error")
+
+    return redirect(url_for("admin_borrowing"))
+
+
 @app.route("/user_settings")
 def user_settings():
     user_id = session.get("user_id")
@@ -809,6 +969,59 @@ def user_settings():
             return "User not found", 404
     else:
         return redirect(url_for("login"))
+
+
+@app.route("/feedback")
+def feedback():
+    feedbacks = Feedback.query.all()
+
+    for feedback in feedbacks:
+        print(
+            f"Feedback ID: {feedback.id}, User ID: {feedback.user_id}, Feedback: {feedback.message}, User Name: {feedback.user.firstname} {feedback.user.lastname}"
+        )
+
+    return render_template("feedback.html", feedback=feedbacks)
+
+
+@app.route("/deletenotification", methods=["POST"])
+def deletenotification():
+    notification_id = request.form.get("notification_id")
+
+    if not notification_id:
+        return jsonify({"success": False, "error": "No notification_id provided"})
+
+    try:
+        notification_id = int(notification_id)
+        print(f"Received notification_id: {notification_id}")
+
+        notification = Notification.query.filter_by(id=notification_id).first()
+        print(f"Found notification: {notification}")
+
+        if notification:
+            db.session.delete(notification)
+            db.session.commit()
+            return jsonify({"success": True})
+        else:
+            return jsonify({"success": False, "error": "Notification not found"})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)})
+
+
+@app.route("/submitFeedback", methods=["POST"])
+def submit_feedback():
+    feedback_text = request.form.get("feedbackText")
+    user_id = session.get("user_id")
+    if user_id is None:
+        return "User not logged in", 403
+    feedback = Feedback(
+        user_id=user_id, message=feedback_text, created_at=datetime.utcnow()
+    )
+    db.session.add(feedback)
+    db.session.commit()
+    flash("Feedback sent successfully!", "success")
+    return redirect(url_for("user_feedback"))
 
 
 if __name__ == "__main__":

@@ -3,35 +3,72 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <title>Membership Management</title>
   </head>
-
   <body>
     <div class="container-fluid">
       <div class="row">
-        {% include 'includes/adminsidebar.html'%}
-
-        <!-- Main Content -->
+        {% include 'includes/adminsidebar.html' %}
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          {% with messages = get_flashed_messages(with_categories=true) %} {% if
+          messages %}
+          <div class="alert alert-success" id="success-alert" role="alert">
+            <strong>Success!</strong>
+            {% for category, message in messages %} {{ message }} {% endfor %}
+          </div>
+          {% endif %} {% endwith %}
           <header class="py-3">
             <h1 class="display-6 text-dark">Membership Management</h1>
           </header>
 
           <div class="card p-4">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID Number</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="membersList">
-                <!-- Populate with member data from the database -->
-              </tbody>
-            </table>
+            <!-- Borrowing Table with Actions and Status Column -->
+            <div class="borrowing-table">
+              <table id="membershipDataTable" class="table table-striped">
+                <thead>
+                  <tr>
+                    {% if 'firstname' in column_headers %}
+                    <th>Firstname</th>
+                    {% endif %} {% if 'lastname' in column_headers %}
+                    <th>Lastname</th>
+                    {% endif %} {% if 'id_number' in column_headers %}
+                    <th>ID Number</th>
+                    {% endif %} {% if 'date_of_birth' in column_headers %}
+                    <th>Date of Birth</th>
+                    {% endif %} {% if 'gender' in column_headers %}
+                    <th>Gender</th>
+                    {% endif %} {% if 'contact_number' in column_headers %}
+                    <th>Contact Number</th>
+                    {% endif %}
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {% for member in members %}
+                  <tr>
+                    {% if 'firstname' in column_headers %}
+                    <td>{{ member.firstname }}</td>
+                    {% endif %} {% if 'lastname' in column_headers %}
+                    <td>{{ member.lastname }}</td>
+                    {% endif %} {% if 'id_number' in column_headers %}
+                    <td>{{ member.id_number }}</td>
+                    {% endif %} {% if 'date_of_birth' in column_headers %}
+                    <td>
+                      {% if member.date_of_birth %} {{
+                      member.date_of_birth.strftime('%Y-%m-%d') }} {% else %}
+                      N/A {% endif %}
+                    </td>
+                    {% endif %} {% if 'gender' in column_headers %}
+                    <td>{{ member.gender }}</td>
+                    {% endif %} {% if 'contact_number' in column_headers %}
+                    <td>{{ member.contact_number }}</td>
+                    {% endif %}
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
         </main>
       </div>
@@ -41,7 +78,12 @@
       <p>&copy; 2024 GymPro</p>
     </footer>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <!-- Add DataTables and Bootstrap JS libraries -->
+
+    <script>
+      $(document).ready(function () {
+        $("#membershipDataTable").DataTable();
+      });
+    </script>
   </body>
 </html>

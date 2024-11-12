@@ -3,80 +3,111 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-    />
-    <title>Notifications</title>
-  </head>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 
-  <body class="admin-dashboard">
+    <title>Notification Management</title>
+  </head>
+  <body>
     <div class="container-fluid">
       <div class="row">
         {% include 'includes/adminsidebar.html'%}
 
-        <!-- Main Content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
           <header class="py-3">
-            <h1 class="display-6 text-dark">Notifications</h1>
+            <h1 class="display-6 text-dark">Notification Management</h1>
           </header>
 
-          <!-- Notifications Box -->
           <div class="card p-4">
-            <!-- Notifications Header -->
-            <div class="d-flex justify-content-between mb-3">
-              <div class="search-bar d-flex align-items-center">
-                <i class="fas fa-search me-2"></i>
-                <input
-                  type="text"
-                  class="form-control"
-                  placeholder="Search Notifications"
-                />
-              </div>
-              <button class="btn btn-outline-success">
-                <i class="fas fa-check"></i> Dismiss All
-              </button>
-            </div>
+            <div class="table-responsive">
+              <table class="table table-striped" id="table">
+                <thead>
+                  <tr>
+                    <th>Message</th>
+                    <th>Created At</th>
+                    <th>User</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for notification in notifications %}
+                  <tr id="notification-{{ notification.id }}">
+                    <td>
+                      {{ notification.user.firstname }} {{
+                      notification.user.lastname }}
+                    </td>
+                    <td>
+                      {{ notification.user.firstname }}'s booking request has
+                      been {% if 'approved' in notification.message %} approved.
+                      {% elif 'rejected' in notification.message %} rejected.
+                      Reason: {{
+                      notification.message.split('Reason:')[1].split('Solution:')[0]
+                      }} Solution: {{ notification.message.split('Solution:')[1]
+                      }} {% else %} {{ notification.message }} {% endif %}
+                    </td>
+                    <td>{{ notification.created_at }}</td>
+                    <td>
+                      <button
+                        class="btn btn-danger btn-sm delete-btn"
+                        data-notification-id="{{ notification.id }}"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
 
-            <!-- Notifications List -->
-            <ul id="notificationsList" class="list-unstyled">
-              <!-- Sample Notification -->
-              <li class="d-flex align-items-start notification-item mb-3">
-                <div class="icon-circle me-3">
-                  <i class="fas fa-exclamation-circle"></i>
-                </div>
-                <div class="notification-content flex-grow-1">
-                  <div class="title fw-bold">Action Required</div>
-                  <div class="description">
-                    <p>
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                    </p>
-                  </div>
-                </div>
-                <div class="dismiss-btn">
-                  <button class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-check"></i> Dismiss
-                  </button>
-                </div>
-              </li>
-              <!-- More notifications can be dynamically added here -->
-            </ul>
+                  <script>
+                    document
+                      .querySelectorAll(".delete-btn")
+                      .forEach((button) => {
+                        button.addEventListener("click", function () {
+                          const notificationId = this.getAttribute(
+                            "data-notification-id"
+                          );
+
+                          fetch("/deletenotification", {
+                            method: "POST",
+                            headers: {
+                              "Content-Type":
+                                "application/x-www-form-urlencoded",
+                            },
+                            body: new URLSearchParams({
+                              notification_id: notificationId,
+                            }),
+                          })
+                            .then((response) => response.json())
+                            .then((data) => {
+                              if (data.success) {
+                                document
+                                  .getElementById(
+                                    `notification-${notificationId}`
+                                  )
+                                  .remove();
+                              } else {
+                                alert("Error deleting feedback: " + data.error);
+                              }
+                            })
+                            .catch((error) => {
+                              console.error("Error:", error);
+                            });
+                        });
+                      });
+                  </script>
+                </tbody>
+              </table>
+            </div>
           </div>
         </main>
       </div>
     </div>
-
+    <script>
+      $(document).ready(function () {
+        $("#table").DataTable();
+      });
+    </script>
     <!-- Footer -->
     <footer class="admin-footer">
       <p>&copy; 2024 GymPro</p>
     </footer>
-
-    <script>
-      // Add dynamic fetching and dismissal functionality as needed
-    </script>
   </body>
 </html>

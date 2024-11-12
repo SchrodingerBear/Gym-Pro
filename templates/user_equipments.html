@@ -70,6 +70,7 @@
               />
               <div class="card-body d-flex flex-column">
                 <h5 class="card-title">{{ equipment.name }}</h5>
+                <h5 class="card-title">Available: {{ equipment.quantity }}</h5>
                 <div class="mt-auto">
                   {% if equipment.quantity > 0 %}
                   <button

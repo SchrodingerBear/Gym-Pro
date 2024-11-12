@@ -67,7 +67,6 @@
 
   .admin-sidebar a:hover,
   .admin-sidebar a.active {
-    color: var(--theme-color);
   }
 
   /* dashboardcard Styling */
@@ -85,7 +84,6 @@
 
   .dashboardcard h3 {
     font-size: 1.2rem;
-    color: var(--theme-color);
   }
 
   /* Main Content */
@@ -179,6 +177,16 @@
         <i class="fas fa-box"></i> Inventory
       </a>
     </li>
+
+    <li class="nav-item">
+      <a
+        href="{{ url_for('feedback') }}"
+        class="nav-link {% if request.path == '/admin/feedback' %}active{% endif %}"
+      >
+        <i class="fas fa-comment-alt"></i> Feedback
+      </a>
+    </li>
+
     <li class="nav-item">
       <a
         href="{{ url_for('admin_notifications') }}"

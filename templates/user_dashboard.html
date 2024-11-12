@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>User Dashboard</title>
   </head>
+  <style>
+    .dashboardcard {
+      transition: transform 0.2s;
+    }
+
+    a {
+      text-decoration: none !important;
+    }
+    .dashboardcard:hover {
+      color: #0056b3 !important;
+    }
+    .dashboardcard:hover {
+      transform: scale(1.05);
+    }
+  </style>
   <body>
     <!-- Navbar Section -->
     <nav
@@ -12,7 +27,7 @@
       style="background-color: #0c0920"
     >
       <div class="container">
-        <a class="navbar-brand" href="#">Appointment </a>
+        <a class="navbar-brand" href="#">Dashboard </a>
         <button
           class="navbar-toggler"
           type="button"
@@ -52,7 +67,10 @@
               class="dashboard-stats row text-center"
               aria-label="Dashboard Statistics"
             >
-              <div class="col-md-4 mb-4">
+              <a
+                href="/tables?page=appointments"
+                class="col-md-4 mb-4 dashboardcard"
+              >
                 <div class="card h-100 shadow-sm">
                   <div class="card-body">
                     <i
@@ -67,8 +85,11 @@
                     </p>
                   </div>
                 </div>
-              </div>
-              <div class="col-md-4 mb-4">
+              </a>
+              <a
+                href="/tables?page=borrowed"
+                class="col-md-4 mb-4 dashboardcard"
+              >
                 <div class="card h-100 shadow-sm">
                   <div class="card-body">
                     <i
@@ -81,8 +102,8 @@
                     </p>
                   </div>
                 </div>
-              </div>
-              <div class="col-md-4 mb-4">
+              </a>
+              <a href="/user_notifications" class="col-md-4 mb-4 dashboardcard">
                 <div class="card h-100 shadow-sm">
                   <div class="card-body">
                     <i
@@ -95,7 +116,7 @@
                     </p>
                   </div>
                 </div>
-              </div>
+              </a>
             </section>
           </main>
         </div>
