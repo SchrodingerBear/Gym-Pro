@@ -307,6 +307,18 @@
       alt="GymPro Logo"
       width="100"
     />
+    {% set user_id = session.user_id if session.user_id else '' %}
+
+    <!-- Display Profile Image -->
+    <div class="profile">
+      <img
+        src="{{ '/static/' + (user_id|string if user_id else 'default.png') + '.png' }}"
+        alt="User Profile"
+        width="50"
+        height="50"
+        style="border-radius: 50%"
+      />
+    </div>
     <h3>GymPro User Panel</h3>
   </div>
 

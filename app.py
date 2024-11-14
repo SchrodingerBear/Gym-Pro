@@ -21,12 +21,11 @@ from sqlalchemy.orm import joinedload
 app = Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root@localhost/gympro"
-
-
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "your_secret_key"
 app.config["UPLOAD_FOLDER"] = "static/images"
-
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+STATIC_FOLDER = os.path.join(APP_ROOT, "static")
 
 db = SQLAlchemy(app)
 
@@ -107,16 +106,19 @@ class Inventory(db.Model):
 
 from datetime import datetime
 
+
 def serialize_booking(booking):
     return {
-        'member_name': booking.member_name,
-        'user_name': booking.user_name,
-        'contact_number': booking.contact_number,
-        'appointment_date': booking.appointment_date.strftime('%Y-%m-%d'),
-        'appointment_time': booking.appointment_time.strftime('%H:%M:%S'),
-        'message': booking.message,
-        'status': booking.status,
+        "member_name": booking.member_name,
+        "user_name": booking.user_name,
+        "contact_number": booking.contact_number,
+        "appointment_date": booking.appointment_date.strftime("%Y-%m-%d"),
+        "appointment_time": booking.appointment_time.strftime("%H:%M:%S"),
+        "message": booking.message,
+        "status": booking.status,
     }
+
+
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     member_name = db.Column(db.String(100), nullable=False)
@@ -406,6 +408,16 @@ def updateuser():
         contact_number = request.form.get("contactNumber")
         new_password = request.form.get("newPassword")
 
+        if "imageUpload" in request.files:
+            profile_image = request.files["imageUpload"]
+            if profile_image:
+                print("true")
+                filename = f"{user_id}.png"
+                print(filename)
+                image_path = os.path.join(STATIC_FOLDER, filename)
+                print(image_path)
+                profile_image.save(image_path)
+
         user = User.query.filter_by(id=user_id).first()
         if first_name:
             user.firstname = first_name
@@ -416,10 +428,9 @@ def updateuser():
         if birthdate:
             user.date_of_birth = birthdate
         if gender:
-            user.gder = gender
+            user.gender = gender
         if contact_number:
             user.contact_number = contact_number
-
         if new_password:
             user.password = new_password
 
@@ -580,18 +591,19 @@ def admin_calendar():
         if not user_id:
             return "Please log in first", 401
 
-        
         appointments = Booking.query.filter(Booking.appointment_date >= today).all()
 
-        
         serialized_appointments = []
         for appointment in appointments:
             serialized_appointments.append(serialize_booking(appointment))
 
-        return render_template("admin_calendar.html", appointments=serialized_appointments)
+        return render_template(
+            "admin_calendar.html", appointments=serialized_appointments
+        )
     else:
         flash("Access denied. Admins only.")
         return redirect(url_for("login"))
+
 
 @app.route("/admin_booking")
 def admin_booking():
