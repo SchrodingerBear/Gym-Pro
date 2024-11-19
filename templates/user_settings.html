@@ -62,7 +62,7 @@
           <section class="settings-section mb-4">
             <h2 class="text-center mb-3">Update Settings</h2>
          
-            <form action="updateuser" method="post">
+            <form action="/updateuser" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                   <label for="userId">
                     <i class="fas fa-id-card"></i> ID Number:
@@ -76,6 +76,20 @@
                     required
                   />
                 </div>
+                <div class="form-group">
+                  <label for="imageUpload">
+                    <i class="fas fa-image"></i> Upload Image:
+                  </label>
+                  <input
+                    type="file"
+                    class="form-control"
+                    id="imageUpload"
+                    name="imageUpload"
+                    accept="image/*"
+                    
+                  />
+                </div>
+                
                 <div class="form-group">
                   <label for="firstName">
                     <i class="fas fa-user"></i> First Name:
