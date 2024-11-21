@@ -65,7 +65,7 @@
                                   <option value="pending">Pending</option>
                                   <option value="accepted" {% if borrow.status == "accepted" %} selected {% endif %}>Accepted</option>
                                   <option value="returned" {% if borrow.status == "returned" %} selected {% endif %}>Returned</option>
-                                  <option value="notify">Send Notification</option>
+                                  <!-- <option value="notify">Send Notification</option> -->
                               </select>
                               <input type="hidden" name="booking_id" value="{{ borrow.id }}">
                           </form>

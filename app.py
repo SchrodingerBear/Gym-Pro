@@ -616,7 +616,6 @@ def update_booking_status(booking_id):
     try:
         booking = Booking.query.get(booking_id)
         new_status = request.form["status"]
-
         if not booking:
             return jsonify({"success": False, "error": "Booking not found"})
 
@@ -652,6 +651,10 @@ def update_booking_status(booking_id):
             )
             notification = Notification(user_id=user.id, message=notification_message)
             db.session.add(notification)
+            db.session.commit()
+
+        elif new_status.lower() == "pending":
+            booking.status = "Pending"
             db.session.commit()
 
         return jsonify({"success": True})
