@@ -193,6 +193,44 @@
                 <div class="col-lg-12 text-center mt-3">
                   <p>Already have an account? <a href="/login">Login</a></p>
                 </div>
+                <div class="container mt-5 text-center">
+                  <p>
+                    Before signing up, you agree to our
+                    <a href="#" id="terms">Terms and Conditions</a>.
+                  </p>
+                </div>
+                <link
+                  rel="stylesheet"
+                  href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+                />
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+                <script>
+                  document
+                    .getElementById("terms")
+                    .addEventListener("click", function () {
+                      Swal.fire({
+                        title: "Terms and Conditions",
+                        html: `
+                        <div style="text-align: left;">
+                          <p><strong>Welcome to ROSU Wellness Center!</strong></p>
+                          <p>By booking an appointment or scheduling material use, you agree to the following terms:</p>
+                          <ul>
+                            <li>All appointments must be confirmed at least 24 hours prior to the scheduled time.</li>
+                            <li>Late arrivals exceeding 15 minutes may result in rescheduling or cancellation.</li>
+                            <li>Materials borrowed during appointments must be returned in their original condition.</li>
+                            <li>Cancellations must be made at least 12 hours before the appointment to avoid a cancellation fee.</li>
+                            <li>The center reserves the right to update terms without prior notice.</li>
+                          </ul>
+                          <p>For more details, contact us at <a href="mailto:info@rosuwellness.com">info@rosuwellness.com</a>.</p>
+                        </div>
+                      `,
+                        icon: "info",
+                        confirmButtonText: "Close",
+                        width: "50%",
+                      });
+                    });
+                </script>
               </div>
             </div>
           </div>
