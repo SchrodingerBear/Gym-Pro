@@ -1,4 +1,5 @@
 import os
+import random
 from flask import (
     Flask,
     render_template,
@@ -89,7 +90,7 @@ class EquipmentBorrowing(db.Model):
     equipment_id = db.Column(db.Integer, db.ForeignKey("inventory.id"), nullable=False)
     borrow_date = db.Column(db.DateTime, default=datetime.utcnow)
     return_date = db.Column(db.DateTime)
-    status = db.Column(db.Integer, nullable=False, default="pending")
+    status = db.Column(db.Integer, nullable=False, default="approve")
 
     inventory = db.relationship("Inventory", backref="borrowings")
 
@@ -119,6 +120,24 @@ def serialize_booking(booking):
     }
 
 
+@app.route("/deletebooking", methods=["POST"])
+def delete_booking():
+    booking_id = request.form.get("id")
+
+    booking = Booking.query.get(booking_id)
+
+    if booking:
+
+        db.session.delete(booking)
+        db.session.commit()
+        return (
+            jsonify({"message": "Booking deleted successfully!", "id": booking_id}),
+            200,
+        )
+    else:
+        return jsonify({"message": "Booking not found!", "id": booking_id}), 404
+
+
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     member_name = db.Column(db.String(100), nullable=False)
@@ -127,7 +146,7 @@ class Booking(db.Model):
     appointment_date = db.Column(db.Date, nullable=False)
     appointment_time = db.Column(db.Time, nullable=False)
     message = db.Column(db.Text)
-    status = db.Column(db.String(20), default="pending")
+    status = db.Column(db.String(20), default="approve")
 
 
 class Equipment(db.Model):
@@ -208,7 +227,7 @@ def signup():
             existing_user = User.query.filter_by(id_number=id_number).first()
             if existing_user:
                 flash(
-                    "The ID number already exists. Please double-check your ID number before signing in.",
+                    "The ID Number already exists. Please double-check before signing in.",
                     "danger",
                 )
                 return render_template("signup2.html")
@@ -228,7 +247,13 @@ def signup():
             db.session.add(new_user)
             db.session.commit()
             flash("Account created successfully!", "success")
-            return redirect(url_for("login"))
+
+            otp = str(random.randint(100000, 999999))
+            session["otp"] = otp
+
+            send_otp_email(id_number, otp)
+
+            return redirect(url_for("otp"))
 
         except Exception as e:
             db.session.rollback()
@@ -237,40 +262,105 @@ def signup():
     return render_template("signup2.html")
 
 
+def send_otp_email(id_number, otp):
+    try:
+
+        import smtplib
+        from email.mime.text import MIMEText
+
+        to = f"{id_number}"
+        message = f"Your OTP for registration is: {otp}"
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login("seancvpugosa@gmail.com", "lxop fytt pemf qprt")
+            msg = MIMEText(message)
+            msg["Subject"] = "OTP for Account Verification"
+            msg["From"] = "seancvpugosa@gmail.com"
+            msg["To"] = to
+
+            server.sendmail("seancvpugosa@gmail.com", to, msg.as_string())
+
+    except Exception as e:
+        print(f"Failed to send OTP email: {e}")
+
+
+@app.route("/otp", methods=["GET", "POST"])
+def otp():
+    if request.method == "POST":
+        entered_otp = request.form["otp"]
+
+        if entered_otp == session.get("otp"):
+            flash("OTP verified successfully!", "success")
+            return redirect(url_for("login"))
+        else:
+            flash("Invalid OTP, please try again.", "danger")
+
+    return render_template("otp.html")
+
+
 @app.route("/returnitem", methods=["POST"])
 def returnitem():
     borrowing_id = request.form.get("id")
-    print(f"Received borrowing ID: {borrowing_id}")
+    cancel = request.form.get("cancel", "false").lower() == "true"
+
+    print(f"Received borrowing ID: {borrowing_id}, Cancel: {cancel}")
 
     borrowing = EquipmentBorrowing.query.get(borrowing_id)
 
     if borrowing:
+        if cancel:
 
-        borrowing.status = "returned"
-        borrowing.return_date = datetime.utcnow()
-
-        result = db.session.execute(
-            text("SELECT quantity FROM inventory WHERE id = :id"),
-            {"id": borrowing.equipment_id},
-        )
-        quantity = result.fetchone()[0]
-
-        if quantity is not None:
-            new_quantity = quantity + 1
-            db.session.execute(
-                text("UPDATE inventory SET quantity = :quantity WHERE id = :id"),
-                {"quantity": new_quantity, "id": borrowing.equipment_id},
+            result = db.session.execute(
+                text("SELECT quantity FROM inventory WHERE id = :id"),
+                {"id": borrowing.equipment_id},
             )
+            quantity = result.fetchone()[0]
 
-        db.session.commit()
+            if quantity is not None:
+                new_quantity = quantity + 1
+                db.session.execute(
+                    text("UPDATE inventory SET quantity = :quantity WHERE id = :id"),
+                    {"quantity": new_quantity, "id": borrowing.equipment_id},
+                )
 
-        flash("Borrowing record updated successfully!", "success")
-        return jsonify(
-            {
-                "message": "Borrowing record updated successfully",
-                "borrowing_id": borrowing_id,
-            }
-        )
+            db.session.delete(borrowing)
+            db.session.commit()
+
+            flash("Borrowing record canceled successfully!", "success")
+            return jsonify(
+                {
+                    "message": "Borrowing record canceled successfully",
+                    "borrowing_id": borrowing_id,
+                }
+            )
+        else:
+
+            borrowing.status = "returned"
+            borrowing.return_date = datetime.utcnow()
+
+            result = db.session.execute(
+                text("SELECT quantity FROM inventory WHERE id = :id"),
+                {"id": borrowing.equipment_id},
+            )
+            quantity = result.fetchone()[0]
+
+            if quantity is not None:
+                new_quantity = quantity + 1
+                db.session.execute(
+                    text("UPDATE inventory SET quantity = :quantity WHERE id = :id"),
+                    {"quantity": new_quantity, "id": borrowing.equipment_id},
+                )
+
+            db.session.commit()
+
+            flash("Borrowing record updated successfully!", "success")
+            return jsonify(
+                {
+                    "message": "Borrowing record updated successfully",
+                    "borrowing_id": borrowing_id,
+                }
+            )
     else:
         flash("Borrowing record not found", "error")
         return (
@@ -287,7 +377,7 @@ def admin_data():
     if "user_id" in session and session.get("role") == "admin":
         total_members = User.query.count()
         total_bookings = Booking.query.count()
-        total_equipment = EquipmentBorrowing.query.filter_by(status="pending").count()
+        total_equipment = EquipmentBorrowing.query.filter_by(status="approve").count()
 
         return jsonify(
             {
@@ -335,7 +425,7 @@ def user_dashboard():
                 member_name=session["user_id"], status="accepted"
             ).count()
             borrow_count = EquipmentBorrowing.query.filter_by(
-                user_id=session["user_id"], status="pending"
+                user_id=session["user_id"], status="approve"
             ).count()
             notification_count = Notification.query.filter_by(
                 user_id=session["user_id"]
@@ -631,7 +721,8 @@ def update_booking_status(booking_id):
             )
             solution = request.form.get("solution", "No solution provided")
 
-            notification_message = f"Your booking request has been rejected. Reason: {rejection_reason}. Solution: {solution}."
+            notification_message = f"Your booking request has been rejected. Reason: {rejection_reason}. Solution: {solution}. Ensure you bring your receipt from the cashier when coming to the gym."
+
             notification = Notification(
                 user_id=booking.member_name, message=notification_message
             )
@@ -792,7 +883,6 @@ def user_appointments():
     user_id = session.get("user_id")
 
     if not user_id:
-
         return "Please log in first", 401
 
     existing_booking = Booking.query.filter_by(
@@ -800,17 +890,15 @@ def user_appointments():
     ).first()
 
     if existing_booking:
-
         return render_template("user_appointments.html", bookedalready=True)
 
     appointments_today = Booking.query.filter_by(appointment_date=today).all()
 
     appointment_count = len(appointments_today)
-
     full = False
     if appointment_count >= 10:
         full = True
-
+    print(full)
     return render_template("user_appointments.html", full=full, bookedalready=False)
 
 
@@ -829,7 +917,7 @@ def book_appointment():
         appointment_date=datetime.strptime(appointment_date, "%Y-%m-%d"),
         appointment_time=datetime.strptime(appointment_time, "%H:%M").time(),
         message=message,
-        status="pending",
+        status="accepted",
     )
 
     db.session.add(new_booking)
@@ -878,8 +966,26 @@ def submit_borrow_request():
 
 @app.route("/user_equipments")
 def user_equipments():
+    today = datetime.utcnow().date()
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return "Please log in first", 401
+
+    borrowed_today = EquipmentBorrowing.query.filter(
+        EquipmentBorrowing.user_id == user_id,
+        db.func.date(EquipmentBorrowing.borrow_date) == today,
+    ).first()
+
+    borrowedalready = borrowed_today is not None
+
     equipment_list = Inventory.query.all()
-    return render_template("user_equipments.html", equipment_list=equipment_list)
+
+    return render_template(
+        "user_equipments.html",
+        equipment_list=equipment_list,
+        borrowedalready=borrowedalready,
+    )
 
 
 @app.route("/user_feedback")
@@ -944,11 +1050,11 @@ def borrow_actions():
 
         if status == "accepted":
             borrowing_record.status = "accepted"
-            message = f"Your borrowing request for item '{borrowing_record.inventory.name}' has been accepted."
+            message = f"Your borrowing request for item '{borrowing_record.inventory.name}' has been accepted. Ensure you bring your receipt from the cashier when coming to the gym for access or equipment."
 
         elif status == "returned":
             borrowing_record.status = "returned"
-            message = f"Your borrowed item '{borrowing_record.inventory.name}' has been returned successfully."
+            message = f"Your borrowed item '{borrowing_record.inventory.name}' has been returned successfully. Ensure you bring your receipt from the cashier when coming to the gym for access or equipment."
 
         elif (
             borrowing_record.return_date
@@ -956,7 +1062,7 @@ def borrow_actions():
             and borrowing_record.status != "returned"
         ):
 
-            message = f"Reminder: The item '{borrowing_record.inventory.name}' is overdue and must be returned."
+            message = f"Reminder: The item '{borrowing_record.inventory.name}' is overdue and must be returned. Ensure you bring your receipt from the cashier when coming to the gym for access or equipment."
 
         if message:
             notification = Notification(

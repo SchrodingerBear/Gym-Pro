@@ -23,6 +23,11 @@
           </header>
 
           <div class="card p-4">
+            <!-- Print Button -->
+            <button onclick="printTable()" class="btn btn-primary mb-3">
+              Print Members
+            </button>
+
             <!-- Borrowing Table with Actions and Status Column -->
             <div class="borrowing-table">
               <table id="membershipDataTable" class="table table-striped">
@@ -78,12 +83,29 @@
       <p>&copy; 2024 GymPro</p>
     </footer>
 
-    <!-- Add DataTables and Bootstrap JS libraries -->
-
     <script>
       $(document).ready(function () {
         $("#membershipDataTable").DataTable();
       });
+
+      function printTable() {
+        // Disable DataTable functionality before printing
+        var table = $("#membershipDataTable").DataTable();
+        table.destroy(); // This removes DataTable functionality
+
+        // Prepare for printing
+        var printContents =
+          document.querySelector(".borrowing-table").innerHTML;
+        var originalContents = document.body.innerHTML;
+
+        // Temporarily change the page content for printing
+        document.body.innerHTML = printContents;
+        window.print();
+
+        // Restore the original content and re-enable DataTable
+        document.body.innerHTML = originalContents;
+        $("#membershipDataTable").DataTable(); // Re-enable DataTable functionality
+      }
     </script>
   </body>
 </html>
