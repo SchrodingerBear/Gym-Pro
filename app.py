@@ -111,7 +111,6 @@ from datetime import datetime
 def serialize_booking(booking):
     return {
         "member_name": booking.member_name,
-        "user_name": booking.user_name,
         "contact_number": booking.contact_number,
         "appointment_date": booking.appointment_date.strftime("%Y-%m-%d"),
         "appointment_time": booking.appointment_time.strftime("%H:%M:%S"),
@@ -1158,6 +1157,29 @@ def deletenotification():
             return jsonify({"success": True})
         else:
             return jsonify({"success": False, "error": "Notification not found"})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)})
+
+
+@app.route("/deletefeedback", methods=["POST"])
+def delete_feedback():
+    feedback_id = request.form.get("feedback_id")
+
+    if not feedback_id:
+        return jsonify({"success": False, "error": "Feedback ID is required."})
+
+    try:
+        feedback = Feedback.query.get(feedback_id)
+
+        if not feedback:
+            return jsonify({"success": False, "error": "Feedback not found."})
+
+        db.session.delete(feedback)
+        db.session.commit()
+
+        return jsonify({"success": True, "message": "Feedback deleted successfully."})
 
     except Exception as e:
         db.session.rollback()
