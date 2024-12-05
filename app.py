@@ -701,21 +701,6 @@ def admin_calendar():
 def admin_booking():
     bookings = Booking.query.all()
 
-    # for booking in bookings:
-    #     print(f"Booking ID: {booking.id}")
-    #     if booking.user:
-    #         print(f"Member Name: {booking.user.firstname} {booking.user.lastname}")
-    #         print(f"User ID Number: {booking.user.id_number}")
-    #         print(f"User Contact Number: {booking.user.contact_number}")
-    #         print(f"Date of Birth: {booking.user.date_of_birth}")
-    #         print(f"Gender: {booking.user.gender}")
-    #         print(f"Membership Status: {booking.user.membership_status}")
-    #     print(f"Appointment Date: {booking.appointment_date}")
-    #     print(f"Appointment Time: {booking.appointment_time}")
-    #     print(f"Message: {booking.message}")
-    #     print(f"Status: {booking.status}")
-    #     print("-" * 40)
-
     return render_template("admin_booking.html", bookings=bookings)
 
 
@@ -1007,7 +992,7 @@ def user_equipments():
 
     borrowed_today = EquipmentBorrowing.query.filter(
         EquipmentBorrowing.user_id == user_id,
-        db.func.date(EquipmentBorrowing.borrow_date) == today,
+        EquipmentBorrowing.status != "returned",
     ).first()
 
     borrowedalready = borrowed_today is not None
