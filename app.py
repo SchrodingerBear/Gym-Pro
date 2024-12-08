@@ -202,14 +202,25 @@ def login():
         password = request.form["password"]
 
         user = User.query.filter_by(id_number=id_number).first()
-        if user and user.password == password:
-            session["user_id"] = user.id
-            session["username"] = f"{user.firstname} {user.lastname}"
-            session["role"] = user.role
-            return redirect(url_for("dashboard"))
+
+        if user:
+            if user.membership_status != "active":
+                flash(
+                    "Account not yet verified. Please verify your account before logging in.",
+                    "warning",
+                )
+                return redirect(url_for("login"))
+
+            if user.password == password:
+                session["user_id"] = user.id
+                session["username"] = f"{user.firstname} {user.lastname}"
+                session["role"] = user.role
+                flash("Login successful!", "success")
+                return redirect(url_for("dashboard"))
+            else:
+                flash("Invalid credentials, please try again.", "danger")
         else:
-            flash("Invalid credentials, please try again.", "error")
-            return redirect(url_for("login"))
+            flash("User not found. Please check your ID number.", "danger")
 
     return render_template("login2.html")
 
@@ -243,7 +254,7 @@ def signup():
                 gender=gender,
                 contact_number=contact_number,
                 role="user",
-                membership_status="active",
+                membership_status="inactive",
             )
 
             db.session.add(new_user)
@@ -252,6 +263,7 @@ def signup():
 
             otp = str(random.randint(100000, 999999))
             session["otp"] = otp
+            session["email"] = id_number
 
             send_otp_email(id_number, otp)
 
@@ -275,13 +287,13 @@ def send_otp_email(id_number, otp):
 
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
-            server.login("seancvpugosa@gmail.com", "lxop fytt pemf qprt")
+            server.login("ktrnexus@gmail.com", "notq jweu novy lefk")
             msg = MIMEText(message)
             msg["Subject"] = "OTP for Account Verification"
-            msg["From"] = "seancvpugosa@gmail.com"
+            msg["From"] = "ktrnexus@gmail.com"
             msg["To"] = to
 
-            server.sendmail("seancvpugosa@gmail.com", to, msg.as_string())
+            server.sendmail("ktrnexus@gmail.com", to, msg.as_string())
 
     except Exception as e:
         print(f"Failed to send OTP email: {e}")
@@ -293,8 +305,21 @@ def otp():
         entered_otp = request.form["otp"]
 
         if entered_otp == session.get("otp"):
-            flash("OTP verified successfully!", "success")
-            return redirect(url_for("login"))
+            try:
+                id_number = session.get("email")
+
+                user = User.query.filter_by(id_number=id_number).first()
+                if user:
+                    user.membership_status = "active"
+                    db.session.commit()
+
+                flash("OTP verified successfully!", "success")
+                return redirect(url_for("login"))
+            except Exception as e:
+                db.session.rollback()
+                flash(
+                    f"An error occurred while updating membership status: {e}", "danger"
+                )
         else:
             flash("Invalid OTP, please try again.", "danger")
 
@@ -395,7 +420,6 @@ def admin_data():
 @app.route("/admin")
 def admin_dashboard():
     print("Admin Dashboard accessed")
-
     if "user_id" in session and session.get("role") == "admin":
         return render_template("admin_dashboard.html")
     else:

@@ -126,9 +126,8 @@
                         />
                       </p>
                     </div>
-
                     <div class="col-md-6">
-                      <p>
+                      <p class="position-relative">
                         <input
                           class="form-control"
                           id="password"
@@ -139,11 +138,21 @@
                           pattern="(?=.*[A-Z])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}"
                           title="Must be at least 8 characters, including one uppercase letter and one special character."
                         />
+                        <span
+                          class="fa fa-eye position-absolute"
+                          id="togglePassword"
+                          style="
+                            cursor: pointer;
+                            top: 50%;
+                            right: 10px;
+                            transform: translateY(-50%);
+                          "
+                        ></span>
                       </p>
                     </div>
 
                     <div class="col-md-6">
-                      <p>
+                      <p class="position-relative">
                         <input
                           class="form-control"
                           id="confirm_password"
@@ -152,8 +161,58 @@
                           required
                           type="password"
                         />
+                        <span
+                          class="fa fa-eye position-absolute"
+                          id="toggleConfirmPassword"
+                          style="
+                            cursor: pointer;
+                            top: 50%;
+                            right: 10px;
+                            transform: translateY(-50%);
+                          "
+                        ></span>
                       </p>
                     </div>
+
+                    <!-- Include Font Awesome -->
+                    <link
+                      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+                      rel="stylesheet"
+                    />
+
+                    <script>
+                      // Toggle password visibility
+                      document
+                        .getElementById("togglePassword")
+                        .addEventListener("click", function () {
+                          const passwordInput =
+                            document.getElementById("password");
+                          const type =
+                            passwordInput.type === "password"
+                              ? "text"
+                              : "password";
+                          passwordInput.type = type;
+
+                          // Toggle the eye / eye-slash icon
+                          this.classList.toggle("fa-eye-slash");
+                        });
+
+                      document
+                        .getElementById("toggleConfirmPassword")
+                        .addEventListener("click", function () {
+                          const confirmPasswordInput =
+                            document.getElementById("confirm_password");
+                          const type =
+                            confirmPasswordInput.type === "password"
+                              ? "text"
+                              : "password";
+                          confirmPasswordInput.type = type;
+
+                          // Toggle the eye / eye-slash icon
+                          this.classList.toggle("fa-eye-slash");
+                        });
+                    </script>
+
                     <!-- Date of Birth and Gender fields -->
                     <div class="col-md-6">
                       <p>
