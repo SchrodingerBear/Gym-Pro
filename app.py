@@ -22,6 +22,8 @@ from sqlalchemy.orm import joinedload
 app = Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root@localhost/gympro"
+# app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://dorsugympromanag:gymprogympro@dorsugympromanager.mysql.pythonanywhere-services.com/dorsugympromanag$gympro"
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "your_secret_key"
 app.config["UPLOAD_FOLDER"] = "static/images"
@@ -259,7 +261,7 @@ def signup():
 
             db.session.add(new_user)
             db.session.commit()
-            flash("Account created successfully!", "success")
+            # flash("Account created successfully!", "success")
 
             otp = str(random.randint(100000, 999999))
             session["otp"] = otp
